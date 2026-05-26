@@ -214,6 +214,8 @@
     .trainer-stat { background:#0f172a; border-radius:10px; padding:12px 10px; text-align:center; }
     .trainer-stat-val { font-size:20px; font-weight:700; color:#f8fafc; line-height:1; }
     .trainer-stat-lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
+    .plan-vs-ist { display:flex; gap:10px; align-items:center; background:#0f172a; border-radius:8px; padding:8px 12px; margin-bottom:12px; }
+    .plan-chip { padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
     .trainer-phase-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; margin-top:6px; }
     .trainer-phase-seg { flex-shrink:0; border-radius:3px; transition:opacity 0.2s; }
     @media (max-width:768px) { .trainer-charts-row { grid-template-columns:1fr; } .trainer-stat-row { grid-template-columns:repeat(2,1fr); } }
@@ -1011,9 +1013,12 @@
   function SessionLogModal({session,week,existing,onSave,onSkip,onClose}){
     const meta=SESSION_META[session.type]||SESSION_META.ga1;
     const isRest=session.type==='rest';
-    const [form,setForm]=useState(existing||{distanceKm:session.distanceKm||'',avgSpeed:'',avgHR:'',maxHR:'',elevationM:'',rpe:0,notes:''});
+    const initDist=existing?existing.distanceKm:(isRest?'':session.distanceKm||'');
+    const [form,setForm]=useState(existing||{distanceKm:initDist,avgSpeed:'',avgHR:'',maxHR:'',elevationM:'',rpe:0,notes:''});
     const set=k=>v=>setForm(f=>({...f,[k]:v}));
     const rpeColor=n=>n<=3?'#22c55e':n<=6?'#f59e0b':n<=8?'#f97316':'#ef4444';
+    const enteredKm=parseFloat(form.distanceKm)||0;
+    const planKm=parseFloat(session.distanceKm)||0;
     return(
       <div className="log-overlay" onClick={onClose}>
         <div className="log-modal" onClick={e=>e.stopPropagation()}>
@@ -1022,49 +1027,184 @@
             <div style={{flex:1}}>
               <div style={{fontSize:15,fontWeight:700,color:'#f8fafc'}}>{session.dayShort} — {meta.label}</div>
               <div style={{fontSize:11,color:'#64748b'}}>{session.date} · Woche {week.weekNumber} · {week.phaseName}</div>
+              {planKm>0&&enteredKm>0&&(
+                <div className="plan-vs-ist" style={{marginTop:6,marginBottom:0}}>
+                  <span className="plan-chip" style={{background:'rgba(100,116,139,0.2)',color:'#94a3b8',border:'1px solid #334155'}}>Plan: {planKm} km</span>
+                  <span style={{fontSize:10,color:'#475569'}}>→</span>
+                  <span className="plan-chip" style={{background:enteredKm>=planKm*0.9?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)',color:enteredKm>=planKm*0.9?'#4ade80':'#f87171',border:`1px solid ${enteredKm>=planKm*0.9?'rgba(34,197,94,0.3)':'rgba(239,68,68,0.3)'}`}}>Ist: {enteredKm} km</span>
+                </div>
+              )}
             </div>
             <button style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18,lineHeight:1}} onClick={onClose}>✕</button>
           </div>
           <div className="log-modal-body">
             <div className="desc-box" style={{borderLeftColor:meta.color}}>{session.description}</div>
-            {isRest?(
-              <div style={{textAlign:'center',padding:'16px 0',color:'#64748b',fontSize:13}}>Ruhetag — kein Training, kein Leistungseintrag nötig.</div>
-            ):(
-              <>
-                <div className="log-grid2">
-                  <div className="log-field"><label>Distanz (km)</label><input className="log-input" type="number" step="0.1" min="0" value={form.distanceKm} onChange={e=>set('distanceKm')(e.target.value)} placeholder={`Ziel: ${session.distanceKm} km`}/></div>
-                  <div className="log-field"><label>Ø Geschwindigkeit (km/h)</label><input className="log-input" type="number" step="0.1" min="0" value={form.avgSpeed} onChange={e=>set('avgSpeed')(e.target.value)}/></div>
-                  <div className="log-field"><label>Ø Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.avgHR} onChange={e=>set('avgHR')(e.target.value)}/></div>
-                  <div className="log-field"><label>Max Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.maxHR} onChange={e=>set('maxHR')(e.target.value)}/></div>
-                  <div className="log-field"><label>Höhenmeter (m)</label><input className="log-input" type="number" min="0" value={form.elevationM} onChange={e=>set('elevationM')(e.target.value)}/></div>
-                </div>
-                <div className="log-field">
-                  <label>Wahrgenommene Anstrengung (RPE 1–10)</label>
-                  <div className="rpe-row">
-                    {[1,2,3,4,5,6,7,8,9,10].map(n=>(
-                      <button key={n} className={`rpe-btn ${form.rpe===n?'active':''}`}
-                        style={form.rpe===n?{background:rpeColor(n),borderColor:rpeColor(n),color:'#fff'}:{}}
-                        onClick={()=>set('rpe')(n)}>{n}</button>
-                    ))}
-                  </div>
-                  <div style={{fontSize:10,color:'#475569',marginTop:3}}>1–3 leicht · 4–6 mittel · 7–8 hart · 9–10 maximal</div>
-                </div>
-                <div className="log-field">
-                  <label>Notizen</label>
-                  <textarea className="log-input" rows={3} value={form.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Wie war die Einheit? Besonderheiten?" style={{resize:'vertical'}}/>
-                </div>
-              </>
+            {isRest&&(
+              <div style={{fontSize:12,color:'#64748b',marginBottom:10,padding:'8px 10px',background:'rgba(100,116,139,0.1)',borderRadius:7,border:'1px solid #334155'}}>
+                Plan: Ruhetag — alle Felder optional. Dennoch aktiv gewesen?
+              </div>
             )}
+            <div className="log-grid2">
+              <div className="log-field"><label>Distanz (km)</label><input className="log-input" type="number" step="0.1" min="0" value={form.distanceKm} onChange={e=>set('distanceKm')(e.target.value)} placeholder={isRest?'0 (Ruhetag)':`Ziel: ${session.distanceKm} km`}/></div>
+              <div className="log-field"><label>Ø Geschwindigkeit (km/h)</label><input className="log-input" type="number" step="0.1" min="0" value={form.avgSpeed} onChange={e=>set('avgSpeed')(e.target.value)}/></div>
+              <div className="log-field"><label>Ø Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.avgHR} onChange={e=>set('avgHR')(e.target.value)}/></div>
+              <div className="log-field"><label>Max Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.maxHR} onChange={e=>set('maxHR')(e.target.value)}/></div>
+              <div className="log-field"><label>Höhenmeter (m)</label><input className="log-input" type="number" min="0" value={form.elevationM} onChange={e=>set('elevationM')(e.target.value)}/></div>
+            </div>
+            <div className="log-field">
+              <label>Wahrgenommene Anstrengung (RPE 1–10)</label>
+              <div className="rpe-row">
+                {[1,2,3,4,5,6,7,8,9,10].map(n=>(
+                  <button key={n} className={`rpe-btn ${form.rpe===n?'active':''}`}
+                    style={form.rpe===n?{background:rpeColor(n),borderColor:rpeColor(n),color:'#fff'}:{}}
+                    onClick={()=>set('rpe')(n)}>{n}</button>
+                ))}
+              </div>
+              <div style={{fontSize:10,color:'#475569',marginTop:3}}>1–3 leicht · 4–6 mittel · 7–8 hart · 9–10 maximal</div>
+            </div>
+            <div className="log-field">
+              <label>Notizen</label>
+              <textarea className="log-input" rows={3} value={form.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Wie war die Einheit? Besonderheiten?" style={{resize:'vertical'}}/>
+            </div>
           </div>
           <div className="log-modal-footer">
             <button className="btn-sm" style={{color:'#f87171',borderColor:'rgba(239,68,68,0.3)'}} onClick={onSkip}>⏭️ Überspringen</button>
             <div style={{flex:1}}/>
             {isRest
-              ?<button className="btn-sm hi" onClick={()=>onSave({rpe:0,notes:form.notes,skipped:false})}>✅ Ruhetag bestätigen</button>
+              ?<button className="btn-sm hi" onClick={()=>onSave({...form,skipped:false})}>✅ Ruhetag bestätigen</button>
               :<button className="btn-sm hi" onClick={()=>onSave({...form,skipped:false})}>💾 Einheit speichern</button>
             }
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ── Trainer: Progress Curve Chart ────────────────────────────────────────
+  function ProgressCurveChart({plan,logs}){
+    const today=new Date().toISOString().slice(0,10);
+    const curWeekIdx=plan.weeks.findIndex(w=>{const d0=w.sessions[0]?.date,d6=w.sessions[6]?.date;return today>=d0&&today<=d6;});
+    // compute per-week plan and actual km
+    const weekData=plan.weeks.map((w,wi)=>{
+      const planKm=w.weekKm||0;
+      const isPast=wi<curWeekIdx;
+      const isCurrent=wi===curWeekIdx;
+      let actualKm=null;
+      if(isPast||isCurrent){
+        actualKm=w.sessions.reduce((sum,sess)=>{
+          const lg=logs[sess.id];
+          if(lg&&!lg.skipped)return sum+(parseFloat(lg.distanceKm)||0);
+          return sum;
+        },0);
+      }
+      return{planKm,actualKm,isPast,isCurrent};
+    });
+    // cumulative arrays
+    let cumPlan=0,cumActual=0;
+    const series=weekData.map((d,i)=>{
+      cumPlan+=d.planKm;
+      const hasActual=d.actualKm!==null;
+      if(hasActual)cumActual+=d.actualKm;
+      return{plan:cumPlan,actual:hasActual?cumActual:null,hasActual};
+    });
+    const doneWeeks=series.filter(s=>s.hasActual);
+    if(doneWeeks.length===0)return null;
+    // trend analysis
+    const lastDelta=doneWeeks[doneWeeks.length-1].actual-doneWeeks[doneWeeks.length-1].plan;
+    const last4=doneWeeks.slice(-4).map(s=>s.actual-s.plan);
+    const last2=doneWeeks.slice(-2).map(s=>s.actual-s.plan);
+    const avg4=last4.reduce((a,b)=>a+b,0)/Math.max(1,last4.length);
+    const avg2=last2.reduce((a,b)=>a+b,0)/Math.max(1,last2.length);
+    const trendImproving=lastDelta>=0?(avg2>=avg4):(avg2>avg4);
+    let trendLabel='',trendColor='#64748b';
+    const absDelta=Math.abs(Math.round(lastDelta));
+    if(lastDelta>=0&&trendImproving){trendLabel=`📈 +${absDelta} km über Plan`;trendColor='#22c55e';}
+    else if(lastDelta>=0&&!trendImproving){trendLabel=`📊 +${absDelta} km über Plan (Tendenz: nachlassend)`;trendColor='#f59e0b';}
+    else if(lastDelta<0&&trendImproving){trendLabel=`📉 ${absDelta} km unter Plan (Tendenz: aufholend)`;trendColor='#f59e0b';}
+    else{trendLabel=`⚠️ ${absDelta} km unter Plan`;trendColor='#ef4444';}
+    // SVG layout
+    const VW=580,VH=200,PL=46,PT=14,PB=30,PR=14;
+    const cW=VW-PL-PR,cH=VH-PT-PB;
+    const n=series.length;
+    const allPlan=series.map(s=>s.plan);
+    const allActual=series.filter(s=>s.hasActual).map(s=>s.actual);
+    const maxY=Math.max(...allPlan,...allActual,10);
+    const xOf=i=>PL+i/(Math.max(n-1,1))*cW;
+    const yOf=v=>PT+cH-(v/maxY)*cH;
+    // build plan line points
+    const planPts=series.map((s,i)=>`${xOf(i).toFixed(1)},${yOf(s.plan).toFixed(1)}`).join(' ');
+    // plan corridor polygon (±10%)
+    const corridorTop=series.map((s,i)=>`${xOf(i).toFixed(1)},${yOf(s.plan*1.1).toFixed(1)}`).join(' ');
+    const corridorBot=[...series].reverse().map((s,i)=>`${xOf(n-1-i).toFixed(1)},${yOf(s.plan*0.9).toFixed(1)}`).join(' ');
+    const corridorPoly=corridorTop+' '+corridorBot;
+    // actual line for done portion
+    const doneCount=series.filter(s=>s.hasActual).length;
+    const actualPts=series.slice(0,doneCount).map((s,i)=>`${xOf(i).toFixed(1)},${yOf(s.actual).toFixed(1)}`).join(' ');
+    // fill between plan and actual
+    const lastDoneIdx=doneCount-1;
+    const fillPts=lastDoneIdx>=0?(
+      series.slice(0,doneCount).map((s,i)=>`${xOf(i).toFixed(1)},${yOf(s.plan).toFixed(1)}`).join(' ')+' '+
+      [...series.slice(0,doneCount)].reverse().map((s,i)=>`${xOf(doneCount-1-i).toFixed(1)},${yOf(s.actual).toFixed(1)}`).join(' ')
+    ):'';
+    const fillColor=lastDelta>=0?'#22c55e':'#ef4444';
+    // current position dot
+    const curIdx=curWeekIdx>=0?curWeekIdx:doneCount-1;
+    const curDot=series[curIdx]&&series[curIdx].hasActual?{x:xOf(curIdx),y:yOf(series[curIdx].actual)}:null;
+    // x-axis labels (max ~10)
+    const labelStep=n<=10?1:n<=20?2:Math.ceil(n/10);
+    // grid km levels
+    const gridKms=[0,0.25,0.5,0.75,1].map(f=>Math.round(maxY*f));
+    return(
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6,flexWrap:'wrap'}}>
+          <span style={{fontSize:12,fontWeight:600,color:'#f8fafc'}}>Kumulierter Fortschritt</span>
+          <span style={{fontSize:11,fontWeight:600,color:trendColor,background:`${trendColor}18`,border:`1px solid ${trendColor}40`,borderRadius:6,padding:'2px 8px'}}>{trendLabel}</span>
+        </div>
+        <svg viewBox={`0 0 ${VW} ${VH}`} style={{width:'100%',height:VH,display:'block'}}>
+          {/* grid lines */}
+          {gridKms.map(km=>(
+            <React.Fragment key={km}>
+              <line x1={PL} y1={yOf(km)} x2={PL+cW} y2={yOf(km)} stroke="#1a2942" strokeWidth={km===0?1.5:0.8}/>
+              <text x={PL-4} y={yOf(km)+3.5} textAnchor="end" fontSize={9} fill="#475569">{km}</text>
+            </React.Fragment>
+          ))}
+          {/* plan corridor */}
+          {n>1&&<polygon points={corridorPoly} fill="#334155" fillOpacity={0.2}/>}
+          {/* fill between plan and actual */}
+          {fillPts&&doneCount>1&&<polygon points={fillPts} fill={fillColor} fillOpacity={0.18}/>}
+          {/* plan line (dashed) */}
+          {n>1&&<polyline points={planPts} fill="none" stroke="#64748b" strokeWidth={1.5} strokeDasharray="5 3"/>}
+          {/* actual line */}
+          {doneCount>1&&<polyline points={actualPts} fill="none" stroke={fillColor} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round"/>}
+          {/* vertical line at current week */}
+          {curWeekIdx>=0&&(
+            <line x1={xOf(curWeekIdx)} y1={PT} x2={xOf(curWeekIdx)} y2={PT+cH} stroke="#3b82f6" strokeWidth={1} strokeDasharray="3 2" opacity={0.6}/>
+          )}
+          {/* current position dot */}
+          {curDot&&(
+            <React.Fragment>
+              <circle cx={curDot.x} cy={curDot.y} r={7} fill={fillColor} fillOpacity={0.25}/>
+              <circle cx={curDot.x} cy={curDot.y} r={4} fill={fillColor}/>
+            </React.Fragment>
+          )}
+          {/* x-axis week labels */}
+          {series.map((s,i)=>{
+            if(i%labelStep!==0&&i!==n-1)return null;
+            const isCur=i===curWeekIdx;
+            return(
+              <text key={i} x={xOf(i)} y={VH-4} textAnchor="middle" fontSize={8}
+                fill={isCur?'#60a5fa':'#334155'} fontWeight={isCur?700:400}>W{plan.weeks[i]?.weekNumber||i+1}</text>
+            );
+          })}
+          {/* legend */}
+          <line x1={PL+4} y1={VH-PB+8} x2={PL+16} y2={VH-PB+8} stroke="#64748b" strokeWidth={1.5} strokeDasharray="4 2"/>
+          <text x={PL+20} y={VH-PB+11} fontSize={9} fill="#64748b">Plan</text>
+          <line x1={PL+50} y1={VH-PB+8} x2={PL+62} y2={VH-PB+8} stroke={fillColor} strokeWidth={2}/>
+          <text x={PL+66} y={VH-PB+11} fontSize={9} fill="#64748b">Ist</text>
+          <rect x={PL+94} y={VH-PB+4} width={10} height={6} fill="#334155" fillOpacity={0.5} rx={1}/>
+          <text x={PL+108} y={VH-PB+11} fontSize={9} fill="#64748b">±10% Korridor</text>
+          <text x={PL-4} y={PT+8} textAnchor="end" fontSize={9} fill="#475569">km</text>
+        </svg>
       </div>
     );
   }
@@ -1102,7 +1242,7 @@
             <button className="btn-danger" style={{flexShrink:0}} onClick={onDeletePlan}>🗑️</button>
           </div>
 
-          {/* Charts row: donut + weekly bars */}
+          {/* Charts row: donut + progress curve */}
           <div className="trainer-charts-row">
             {/* Donut */}
             {(()=>{
@@ -1123,61 +1263,8 @@
               );
             })()}
 
-            {/* Weekly volume bars — last 12 weeks */}
-            {(()=>{
-              const recent=plan.weeks.slice(Math.max(0,curWeekIdx-4),curWeekIdx+8);
-              const maxKm=Math.max(...recent.map(w=>w.weekKm),10);
-              const W=380,H=100,PB=20,PT=6,PL=6,PR=6;
-              const cW=W-PL-PR,cH=H-PB-PT;
-              const bW=Math.max(4,cW/recent.length*0.55);
-              const xC=i=>PL+(i+0.5)*cW/recent.length;
-              return(
-                <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H,display:'block'}}>
-                  {/* grid */}
-                  {[0,0.5,1].map(f=>(
-                    <React.Fragment key={f}>
-                      <line x1={PL} y1={PT+cH*(1-f)} x2={PL+cW} y2={PT+cH*(1-f)} stroke="#1a2942" strokeWidth={1}/>
-                      <text x={PL-2} y={PT+cH*(1-f)+3} textAnchor="end" fontSize={8} fill="#334155">{Math.round(maxKm*f)}</text>
-                    </React.Fragment>
-                  ))}
-                  {recent.map((w,i)=>{
-                    const wi2=plan.weeks.indexOf(w);
-                    const wDoneKm=w.sessions.filter(s=>s.type!=='rest').reduce((a,s)=>a+(parseFloat(logs[s.id]?.distanceKm)||0),0);
-                    const planH=(w.weekKm/maxKm)*cH;
-                    const doneH=(wDoneKm/maxKm)*cH;
-                    const isCurW=wi2===curWeekIdx;
-                    const isPast=wi2<curWeekIdx;
-                    const ph=PHASE_META[w.phase];
-                    const clr=wDoneKm>=w.weekKm*0.9?'#22c55e':'#3b82f6';
-                    const x=xC(i);
-                    return(
-                      <g key={i}>
-                        {/* plan bar */}
-                        <rect x={x-bW} y={PT+cH-planH} width={bW} height={planH} fill={`${ph.color}30`} rx={2}/>
-                        {/* done bar */}
-                        {(isPast||isCurW)&&doneH>0&&(
-                          <rect x={x} y={PT+cH-doneH} width={bW} height={doneH} fill={clr} rx={2} opacity={0.85}/>
-                        )}
-                        {/* future: show plan outline only */}
-                        {!isPast&&!isCurW&&(
-                          <rect x={x} y={PT+cH-planH} width={bW} height={planH} fill="none" stroke={ph.color} strokeWidth={1} strokeDasharray="2 2" rx={2} opacity={0.4}/>
-                        )}
-                        {isCurW&&<rect x={x-bW} y={PT} width={bW*2+2} height={cH} fill="rgba(59,130,246,0.05)" rx={2}/>}
-                        <text x={x} y={H-4} textAnchor="middle" fontSize={8} fill={isCurW?'#60a5fa':'#334155'}
-                          fontWeight={isCurW?700:400}>W{w.weekNumber}</text>
-                      </g>
-                    );
-                  })}
-                  {/* legend */}
-                  <rect x={W-95} y={3} width={8} height={6} fill="#334155" rx={1}/>
-                  <text x={W-84} y={9} fontSize={8} fill="#475569">Plan</text>
-                  <rect x={W-60} y={3} width={8} height={6} fill="#3b82f6" rx={1}/>
-                  <text x={W-49} y={9} fontSize={8} fill="#475569">Ist</text>
-                  <rect x={W-25} y={3} width={8} height={6} fill="#22c55e" rx={1}/>
-                  <text x={W-14} y={9} fontSize={8} fill="#475569">✓</text>
-                </svg>
-              );
-            })()}
+            {/* Progress curve */}
+            <ProgressCurveChart plan={plan} logs={logs}/>
           </div>
 
           {/* Phase timeline */}
@@ -1279,6 +1366,14 @@
                         <span className="session-chip-type" style={{color:m.color}}>{m.label}</span>
                         {sess.durationMin>0&&<span className="session-chip-dur">{sess.durationMin}min</span>}
                         {sess.distanceKm>0&&<span className="session-chip-dur">{sess.distanceKm}km</span>}
+                        {isDone&&sess.distanceKm>0&&(
+                          <div style={{fontSize:8,color:'#475569',marginTop:1}}>
+                            {Math.round(parseFloat(logs[sess.id]?.distanceKm)||0)} / {sess.distanceKm}km
+                          </div>
+                        )}
+                        {isDone&&sess.type==='rest'&&parseFloat(logs[sess.id]?.distanceKm)>0&&(
+                          <div style={{fontSize:8,color:'#22c55e',marginTop:1}}>+{parseFloat(logs[sess.id].distanceKm)}km</div>
+                        )}
                         {isDone&&<div className="chip-badge" style={{background:'#22c55e'}}>✓</div>}
                         {isSkip&&<div className="chip-badge" style={{background:'#ef4444'}}>–</div>}
                       </div>
