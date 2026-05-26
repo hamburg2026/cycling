@@ -26,8 +26,10 @@
     .section-title { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
     .form-group { margin-bottom: 10px; }
     label { font-size: 13px; color: #94a3b8; margin-bottom: 4px; display: block; }
-    input[type="text"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px 11px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s; }
-    input[type="text"]:focus { border-color: #3b82f6; }
+    input[type="text"],input[type="number"],input[type="date"],select { width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 10px 13px; border-radius: 9px; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+    input[type="text"]:focus,input[type="number"]:focus,input[type="date"]:focus,select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .form-group label { font-size: 12px; font-weight: 500; color: #94a3b8; margin-bottom: 5px; letter-spacing: 0.3px; }
     input[type="range"] { width: 100%; cursor: pointer; accent-color: #3b82f6; margin-top: 4px; }
     .range-display { display: flex; justify-content: space-between; align-items: baseline; margin-top: 3px; }
     .range-value { font-size: 20px; font-weight: 700; color: #3b82f6; }
@@ -203,14 +205,18 @@
     .fitness-opt-label { font-size:12px; font-weight:600; color:#e2e8f0; }
     .fitness-opt-sub { font-size:10px; color:#64748b; margin-top:2px; }
 
-    .trainer-progress { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:18px; }
-    .trainer-goal-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-    .trainer-goal-label { font-size:18px; font-weight:700; color:#f8fafc; }
-    .trainer-goal-meta { font-size:12px; color:#64748b; display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+    .trainer-progress { background:#1e293b; border:1px solid #334155; border-radius:14px; padding:20px; margin-bottom:18px; }
+    .trainer-goal-row { display:flex; align-items:flex-start; gap:16px; margin-bottom:18px; }
+    .trainer-goal-label { font-size:20px; font-weight:700; color:#f8fafc; line-height:1.2; }
+    .trainer-goal-meta { font-size:12px; color:#64748b; display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-top:4px; }
+    .trainer-charts-row { display:grid; grid-template-columns:auto 1fr; gap:18px; align-items:center; margin-bottom:18px; }
     .trainer-stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-    .trainer-stat { background:#0f172a; border-radius:8px; padding:10px; text-align:center; }
-    .trainer-stat-val { font-size:17px; font-weight:700; color:#f8fafc; }
-    .trainer-stat-lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+    .trainer-stat { background:#0f172a; border-radius:10px; padding:12px 10px; text-align:center; }
+    .trainer-stat-val { font-size:20px; font-weight:700; color:#f8fafc; line-height:1; }
+    .trainer-stat-lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
+    .trainer-phase-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; margin-top:6px; }
+    .trainer-phase-seg { flex-shrink:0; border-radius:3px; transition:opacity 0.2s; }
+    @media (max-width:768px) { .trainer-charts-row { grid-template-columns:1fr; } .trainer-stat-row { grid-template-columns:repeat(2,1fr); } }
 
     .week-row { background:#1e293b; border:1px solid #334155; border-radius:10px; margin-bottom:8px; overflow:hidden; }
     .week-header { padding:10px 14px; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; flex-wrap:wrap; }
@@ -232,8 +238,8 @@
     .log-modal-footer { padding:12px 18px; border-top:1px solid #334155; display:flex; gap:8px; align-items:center; }
     .log-field { margin-bottom:12px; }
     .log-field label { font-size:12px; color:#94a3b8; display:block; margin-bottom:4px; }
-    .log-input { width:100%; background:#0f172a; border:1px solid #334155; color:#f8fafc; padding:7px 11px; border-radius:7px; font-size:13px; outline:none; transition:border-color 0.2s; }
-    .log-input:focus { border-color:#6366f1; }
+    .log-input { width:100%; background:#0f172a; border:1px solid #334155; color:#f8fafc; padding:9px 12px; border-radius:8px; font-size:13px; outline:none; transition:border-color 0.2s; font-family:inherit; }
+    .log-input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
     .log-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .rpe-row { display:flex; gap:4px; flex-wrap:wrap; }
     .rpe-btn { width:34px; height:34px; border-radius:7px; border:1px solid #334155; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s; background:#0f172a; color:#64748b; }
@@ -898,22 +904,22 @@
         {/* Fahrerprofil */}
         <div className="profile-card">
           <div className="profile-avatar">🚴</div>
-          <div style={{fontSize:12,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.6px',marginBottom:10}}>Allgemein</div>
-          <div className="form-group"><label>Name</label><input type="text" value={profile.name||''} onChange={ch('name')} placeholder="Dein Name"/></div>
-          <div className="form-group">
-            <label>Ø Geschwindigkeit auf der Route</label>
+          <div style={{fontSize:11,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.8px',marginBottom:12}}>Allgemein</div>
+          <div className="log-field"><label className="log-field" style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:5}}>Name</label><input className="log-input" type="text" value={profile.name||''} onChange={ch('name')} placeholder="Dein Name"/></div>
+          <div className="log-field" style={{marginTop:12}}>
+            <label style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:5}}>Ø Geschwindigkeit auf der Route</label>
             <input type="range" min="10" max="45" step="1" value={profile.speed||25} onChange={e=>onChange({...profile,speed:+e.target.value})}/>
             <div className="range-display"><span className="range-value">{profile.speed||25}</span><span className="range-unit">km/h</span></div>
           </div>
-          <div style={{fontSize:12,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.6px',margin:'14px 0 10px'}}>Körper & Fitness</div>
-          <div className="log-grid2" style={{marginBottom:12}}>
-            <div className="form-group"><label>Alter (Jahre)</label><input type="number" min="10" max="90" value={profile.age||''} onChange={ch('age')} placeholder="z. B. 38"/></div>
-            <div className="form-group"><label>Gewicht (kg)</label><input type="number" min="30" max="200" value={profile.weight||''} onChange={ch('weight')} placeholder="z. B. 75"/></div>
-            <div className="form-group"><label>km/Woche aktuell</label><input type="number" min="0" value={profile.weeklyKm||''} onChange={ch('weeklyKm')} placeholder="z. B. 80"/></div>
-            <div className="form-group"><label>FTP (Watt, optional)</label><input type="number" min="0" value={profile.ftp||''} onChange={ch('ftp')} placeholder="z. B. 220"/></div>
+          <div style={{fontSize:11,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.8px',margin:'18px 0 12px'}}>Körper & Fitness</div>
+          <div className="log-grid2" style={{marginBottom:14}}>
+            <div className="log-field"><label style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:5}}>Alter (Jahre)</label><input className="log-input" type="number" min="10" max="90" value={profile.age||''} onChange={ch('age')} placeholder="z. B. 38"/></div>
+            <div className="log-field"><label style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:5}}>Gewicht (kg)</label><input className="log-input" type="number" min="30" max="200" value={profile.weight||''} onChange={ch('weight')} placeholder="z. B. 75"/></div>
+            <div className="log-field"><label style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:5}}>km / Woche aktuell</label><input className="log-input" type="number" min="0" value={profile.weeklyKm||''} onChange={ch('weeklyKm')} placeholder="z. B. 80"/></div>
+            <div className="log-field"><label style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:5}}>FTP (Watt, optional)</label><input className="log-input" type="number" min="0" value={profile.ftp||''} onChange={ch('ftp')} placeholder="z. B. 220"/></div>
           </div>
-          <div className="form-group">
-            <label>Fitnesslevel</label>
+          <div className="log-field" style={{marginBottom:0}}>
+            <label style={{fontSize:12,color:'#94a3b8',display:'block',marginBottom:8}}>Fitnesslevel</label>
             <div className="fitness-options">
               {fitOpts.map(f=>(
                 <div key={f.id} className={`fitness-opt ${(profile.fitnessLevel||'intermediate')===f.id?'active':''}`} onClick={()=>onChange({...profile,fitnessLevel:f.id})}>
@@ -1082,26 +1088,158 @@
       <div>
         {/* Goal/progress header */}
         <div className="trainer-progress">
+          {/* Title + meta */}
           <div className="trainer-goal-row">
-            <span className="trainer-goal-label">🏆 {plan.goal.eventName||'Trainingsplan'}</span>
-            <div className="trainer-goal-meta">
-              <span>📅 {new Date(plan.goal.targetDate).toLocaleDateString('de',{day:'2-digit',month:'long',year:'numeric'})}</span>
-              <span>·</span><span>📏 {plan.goal.distanceKm} km</span>
-              <span>·</span><span>⚡ {plan.goal.targetSpeedKmh} km/h</span>
-              <span>·</span><span>⏱️ {Math.floor(raceHrs)}h{Math.round((raceHrs%1)*60)}min</span>
+            <div style={{flex:1}}>
+              <div className="trainer-goal-label">🏆 {plan.goal.eventName||'Trainingsplan'}</div>
+              <div className="trainer-goal-meta">
+                <span>📅 {new Date(plan.goal.targetDate).toLocaleDateString('de',{day:'2-digit',month:'long',year:'numeric'})}</span>
+                <span>·</span><span>📏 {plan.goal.distanceKm} km</span>
+                <span>·</span><span>⚡ {plan.goal.targetSpeedKmh} km/h</span>
+                <span>·</span><span>⏱️ {Math.floor(raceHrs)}h{Math.round((raceHrs%1)*60)}min</span>
+              </div>
             </div>
+            <button className="btn-danger" style={{flexShrink:0}} onClick={onDeletePlan}>🗑️</button>
           </div>
-          <div style={{background:'#334155',borderRadius:6,height:6,marginBottom:12,overflow:'hidden'}}>
-            <div style={{height:'100%',background:'linear-gradient(90deg,#22c55e,#3b82f6)',borderRadius:6,width:`${pct}%`,transition:'width 0.5s'}}/>
+
+          {/* Charts row: donut + weekly bars */}
+          <div className="trainer-charts-row">
+            {/* Donut */}
+            {(()=>{
+              const R=52,r=36,cx=60,cy=60,circumference=2*Math.PI*r;
+              const stroke=circumference*(1-pct/100);
+              const clr=pct>=80?'#22c55e':pct>=40?'#3b82f6':'#f59e0b';
+              return(
+                <svg width={120} height={120} viewBox="0 0 120 120">
+                  <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1a2942" strokeWidth={16}/>
+                  <circle cx={cx} cy={cy} r={r} fill="none" stroke={clr} strokeWidth={16}
+                    strokeDasharray={circumference} strokeDashoffset={stroke}
+                    strokeLinecap="round" transform={`rotate(-90 ${cx} ${cy})`}
+                    style={{transition:'stroke-dashoffset 0.8s ease'}}/>
+                  <text x={cx} y={cy-6} textAnchor="middle" fontSize={20} fontWeight={700} fill="#f8fafc">{pct}%</text>
+                  <text x={cx} y={cy+10} textAnchor="middle" fontSize={9} fill="#64748b">ERLEDIGT</text>
+                  <text x={cx} y={cy+22} textAnchor="middle" fontSize={9} fill="#475569">{done.length}/{active.length}</text>
+                </svg>
+              );
+            })()}
+
+            {/* Weekly volume bars — last 12 weeks */}
+            {(()=>{
+              const recent=plan.weeks.slice(Math.max(0,curWeekIdx-4),curWeekIdx+8);
+              const maxKm=Math.max(...recent.map(w=>w.weekKm),10);
+              const W=380,H=100,PB=20,PT=6,PL=6,PR=6;
+              const cW=W-PL-PR,cH=H-PB-PT;
+              const bW=Math.max(4,cW/recent.length*0.55);
+              const xC=i=>PL+(i+0.5)*cW/recent.length;
+              return(
+                <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H,display:'block'}}>
+                  {/* grid */}
+                  {[0,0.5,1].map(f=>(
+                    <React.Fragment key={f}>
+                      <line x1={PL} y1={PT+cH*(1-f)} x2={PL+cW} y2={PT+cH*(1-f)} stroke="#1a2942" strokeWidth={1}/>
+                      <text x={PL-2} y={PT+cH*(1-f)+3} textAnchor="end" fontSize={8} fill="#334155">{Math.round(maxKm*f)}</text>
+                    </React.Fragment>
+                  ))}
+                  {recent.map((w,i)=>{
+                    const wi2=plan.weeks.indexOf(w);
+                    const wDoneKm=w.sessions.filter(s=>s.type!=='rest').reduce((a,s)=>a+(parseFloat(logs[s.id]?.distanceKm)||0),0);
+                    const planH=(w.weekKm/maxKm)*cH;
+                    const doneH=(wDoneKm/maxKm)*cH;
+                    const isCurW=wi2===curWeekIdx;
+                    const isPast=wi2<curWeekIdx;
+                    const ph=PHASE_META[w.phase];
+                    const clr=wDoneKm>=w.weekKm*0.9?'#22c55e':'#3b82f6';
+                    const x=xC(i);
+                    return(
+                      <g key={i}>
+                        {/* plan bar */}
+                        <rect x={x-bW} y={PT+cH-planH} width={bW} height={planH} fill={`${ph.color}30`} rx={2}/>
+                        {/* done bar */}
+                        {(isPast||isCurW)&&doneH>0&&(
+                          <rect x={x} y={PT+cH-doneH} width={bW} height={doneH} fill={clr} rx={2} opacity={0.85}/>
+                        )}
+                        {/* future: show plan outline only */}
+                        {!isPast&&!isCurW&&(
+                          <rect x={x} y={PT+cH-planH} width={bW} height={planH} fill="none" stroke={ph.color} strokeWidth={1} strokeDasharray="2 2" rx={2} opacity={0.4}/>
+                        )}
+                        {isCurW&&<rect x={x-bW} y={PT} width={bW*2+2} height={cH} fill="rgba(59,130,246,0.05)" rx={2}/>}
+                        <text x={x} y={H-4} textAnchor="middle" fontSize={8} fill={isCurW?'#60a5fa':'#334155'}
+                          fontWeight={isCurW?700:400}>W{w.weekNumber}</text>
+                      </g>
+                    );
+                  })}
+                  {/* legend */}
+                  <rect x={W-95} y={3} width={8} height={6} fill="#334155" rx={1}/>
+                  <text x={W-84} y={9} fontSize={8} fill="#475569">Plan</text>
+                  <rect x={W-60} y={3} width={8} height={6} fill="#3b82f6" rx={1}/>
+                  <text x={W-49} y={9} fontSize={8} fill="#475569">Ist</text>
+                  <rect x={W-25} y={3} width={8} height={6} fill="#22c55e" rx={1}/>
+                  <text x={W-14} y={9} fontSize={8} fill="#475569">✓</text>
+                </svg>
+              );
+            })()}
           </div>
+
+          {/* Phase timeline */}
+          {(()=>{
+            const totalW=plan.weeks.length;
+            const phases=[];
+            let cur=null;
+            plan.weeks.forEach((w,i)=>{
+              if(!cur||cur.phase!==w.phase){if(cur)phases.push(cur);cur={phase:w.phase,start:i,count:1,label:w.phaseName};}
+              else cur.count++;
+            });
+            if(cur)phases.push(cur);
+            const progW=totalW>0?((curWeekIdx+1)/totalW)*100:0;
+            return(
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:10,color:'#475569',marginBottom:4,display:'flex',justifyContent:'space-between'}}>
+                  <span>Trainingsphase</span>
+                  <span style={{color:'#64748b'}}>{curWeekIdx>=0?`Woche ${curWeekIdx+1} / ${totalW}`:`${totalW} Wochen gesamt`}</span>
+                </div>
+                <div style={{display:'flex',height:10,borderRadius:5,overflow:'hidden',gap:1}}>
+                  {phases.map((ph,i)=>{
+                    const meta=PHASE_META[ph.phase];
+                    const isPast=ph.start+ph.count<=curWeekIdx;
+                    const isCur=ph.start<=curWeekIdx&&curWeekIdx<ph.start+ph.count;
+                    return(
+                      <div key={i} title={ph.label} style={{flex:ph.count,background:meta.color,opacity:isPast?0.35:isCur?1:0.25,borderRadius:3,transition:'opacity 0.3s'}}/>
+                    );
+                  })}
+                </div>
+                <div style={{display:'flex',gap:8,marginTop:5,flexWrap:'wrap'}}>
+                  {phases.map((ph,i)=>{
+                    const meta=PHASE_META[ph.phase];
+                    const isCur=ph.start<=curWeekIdx&&curWeekIdx<ph.start+ph.count;
+                    return(
+                      <span key={i} style={{fontSize:10,color:isCur?meta.color:'#475569',fontWeight:isCur?600:400}}>
+                        <span style={{display:'inline-block',width:6,height:6,borderRadius:2,background:meta.color,marginRight:3,verticalAlign:'middle',opacity:isCur?1:0.5}}/>
+                        {ph.label} ({ph.count}W)
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Stat chips */}
           <div className="trainer-stat-row">
-            {[{v:weeksLeft,l:'Wochen noch'},{v:`${pct}%`,l:'Abgeschlossen'},{v:done.length,l:'Einheiten ok'},{v:`${Math.round(totalKm)} km`,l:'Gefahren'}].map(({v,l})=>(
-              <div key={l} className="trainer-stat"><div className="trainer-stat-val">{v}</div><div className="trainer-stat-lbl">{l}</div></div>
+            {[
+              {v:weeksLeft, l:'Wochen noch', clr:weeksLeft<=2?'#ef4444':weeksLeft<=6?'#f59e0b':'#3b82f6'},
+              {v:`${pct}%`,  l:'Abgeschlossen', clr:pct>=80?'#22c55e':pct>=40?'#3b82f6':'#f59e0b'},
+              {v:done.length, l:'Einheiten ok', clr:'#22c55e'},
+              {v:`${Math.round(totalKm)} km`, l:'Gefahren', clr:'#6366f1'},
+            ].map(({v,l,clr})=>(
+              <div key={l} className="trainer-stat">
+                <div className="trainer-stat-val" style={{color:clr}}>{v}</div>
+                <div className="trainer-stat-lbl">{l}</div>
+              </div>
             ))}
           </div>
-          <div style={{marginTop:12,display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-            <span style={{fontSize:11,color:'#475569',flex:1}}>Fitnesslevel: {plan.profile.fitnessLevel} · Alter: {plan.profile.age} J. · Gewicht: {plan.profile.weight} kg</span>
-            <button className="btn-danger" onClick={onDeletePlan}>🗑️ Plan löschen</button>
+
+          <div style={{marginTop:10,fontSize:11,color:'#334155'}}>
+            {plan.profile.fitnessLevel} · {plan.profile.age ? `${plan.profile.age} J.` : ''} {plan.profile.weight ? `· ${plan.profile.weight} kg` : ''}
           </div>
         </div>
 
