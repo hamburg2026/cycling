@@ -190,6 +190,56 @@
     /* ── Manual route rerouting notice ── */
     .manual-status { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(99,102,241,0.1); border-bottom: 1px solid rgba(99,102,241,0.2); font-size: 12px; color: #a5b4fc; }
 
+    /* ── Trainer ── */
+    .setup-card { background:#1e293b; border:1px solid #334155; border-radius:14px; padding:22px; max-width:560px; }
+    .setup-title { font-size:18px; font-weight:700; color:#f8fafc; margin-bottom:4px; }
+    .setup-subtitle { font-size:12px; color:#64748b; margin-bottom:16px; }
+    .step-indicator { display:flex; align-items:center; gap:6px; margin-bottom:18px; }
+    .step-dot { border-radius:50%; transition:all 0.2s; }
+    .fitness-options { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px; }
+    .fitness-opt { padding:12px 8px; border:1px solid #334155; border-radius:10px; cursor:pointer; text-align:center; transition:all 0.15s; background:#0f172a; }
+    .fitness-opt.active { border-color:#6366f1; background:rgba(99,102,241,0.12); }
+    .fitness-opt-icon { font-size:26px; margin-bottom:5px; }
+    .fitness-opt-label { font-size:12px; font-weight:600; color:#e2e8f0; }
+    .fitness-opt-sub { font-size:10px; color:#64748b; margin-top:2px; }
+
+    .trainer-progress { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:18px; }
+    .trainer-goal-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .trainer-goal-label { font-size:18px; font-weight:700; color:#f8fafc; }
+    .trainer-goal-meta { font-size:12px; color:#64748b; display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+    .trainer-stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .trainer-stat { background:#0f172a; border-radius:8px; padding:10px; text-align:center; }
+    .trainer-stat-val { font-size:17px; font-weight:700; color:#f8fafc; }
+    .trainer-stat-lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+    .week-row { background:#1e293b; border:1px solid #334155; border-radius:10px; margin-bottom:8px; overflow:hidden; }
+    .week-header { padding:10px 14px; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; flex-wrap:wrap; }
+    .week-header:hover { background:rgba(255,255,255,0.02); }
+    .week-phase-badge { padding:3px 8px; border-radius:12px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+    .week-sessions { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px 14px; }
+
+    .session-chip { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 10px; border-radius:9px; cursor:pointer; border:1px solid transparent; transition:all 0.15s; min-width:72px; position:relative; }
+    .session-chip:hover { filter:brightness(1.15); transform:translateY(-1px); }
+    .session-chip-day { font-size:10px; color:#64748b; font-weight:600; }
+    .session-chip-type { font-size:11px; font-weight:700; text-align:center; }
+    .session-chip-dur { font-size:10px; color:#94a3b8; }
+    .chip-badge { position:absolute; top:-5px; right:-5px; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#fff; }
+
+    .log-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:10000; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .log-modal { background:#1e293b; border:1px solid #334155; border-radius:16px; width:100%; max-width:490px; max-height:90vh; overflow-y:auto; }
+    .log-modal-header { padding:16px 18px 12px; border-bottom:1px solid #334155; display:flex; align-items:flex-start; gap:10px; }
+    .log-modal-body { padding:14px 18px; }
+    .log-modal-footer { padding:12px 18px; border-top:1px solid #334155; display:flex; gap:8px; align-items:center; }
+    .log-field { margin-bottom:12px; }
+    .log-field label { font-size:12px; color:#94a3b8; display:block; margin-bottom:4px; }
+    .log-input { width:100%; background:#0f172a; border:1px solid #334155; color:#f8fafc; padding:7px 11px; border-radius:7px; font-size:13px; outline:none; transition:border-color 0.2s; }
+    .log-input:focus { border-color:#6366f1; }
+    .log-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .rpe-row { display:flex; gap:4px; flex-wrap:wrap; }
+    .rpe-btn { width:34px; height:34px; border-radius:7px; border:1px solid #334155; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s; background:#0f172a; color:#64748b; }
+    .rpe-btn.active { border-color:transparent; color:#fff; }
+    .desc-box { background:#0f172a; border-radius:8px; padding:10px 12px; font-size:12px; color:#64748b; line-height:1.6; margin-bottom:14px; border-left:3px solid; }
+
     @media (max-width: 768px) {
       #root { flex-direction: column; }
       .sidebar { width: 100%; min-width: unset; height: auto; position: relative; }
@@ -243,6 +293,101 @@
   async function reverseGeocode(lon,lat){
     try{const r=await fetch(`${NOMINATIM_BASE}/reverse?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&format=json&zoom=16`,{headers:{'Accept-Language':'de'}});const d=await r.json();if(d.error)return`${lat.toFixed(4)}, ${lon.toFixed(4)}`;const a=d.address||{};return[a.road||a.pedestrian||a.path||a.suburb,a.city||a.town||a.village||a.county].filter(Boolean).join(', ')||`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}
     catch{return`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}
+  }
+
+  // ── Training Plan ─────────────────────────────────────────────────────────
+  const SESSION_META = {
+    rest:     {label:'Ruhetag',         emoji:'😴', color:'#475569'},
+    recovery: {label:'Erholung',        emoji:'🌿', color:'#22c55e'},
+    ga1:      {label:'GA1',             emoji:'🚴', color:'#3b82f6'},
+    ga2:      {label:'GA2-Tempo',       emoji:'⚡', color:'#f59e0b'},
+    kb:       {label:'Kraft-Ausdauer',  emoji:'💪', color:'#f97316'},
+    interval: {label:'Intervalle',      emoji:'🔥', color:'#ef4444'},
+    longride: {label:'Langer Ausritt',  emoji:'🗺️', color:'#8b5cf6'},
+    raceday:  {label:'Renn-Simulation', emoji:'🏁', color:'#ec4899'},
+  };
+  const PHASE_META = {
+    base:  {label:'Grundlagenphase', color:'#3b82f6'},
+    build: {label:'Aufbauphase',     color:'#f59e0b'},
+    peak:  {label:'Spitzenwoche',    color:'#ef4444'},
+    taper: {label:'Tapering',        color:'#22c55e'},
+  };
+
+  function sessionDesc(type, durMin, goal) {
+    const h = (durMin/60).toFixed(1);
+    return ({
+      rest:     'Vollständige Erholung. Kein Sport, ausreichend schlafen und essen.',
+      recovery: `${h} Std. lockere Ausfahrt — sehr niedriger Puls, Beine drehen sich frei. Kein Druck aufbauen.`,
+      ga1:      `${h} Std. Grundlagenausdauer. Gleichmäßiges Tempo, Gespräch problemlos möglich. Puls 65–75 % HFmax.`,
+      ga2:      `${h} Std. Tempo-Ausdauer. Höhere Intensität, kurze Sätze noch möglich. Puls 75–85 % HFmax.`,
+      kb:       `${h} Std. Kraft-Ausdauer. Bergstrecke oder Flachland mit bewusst niedriger Trittfrequenz (50–60 U/min).`,
+      interval: `${h} Std. Intervalle: 20 Min. Einrollen → 5 × 5 Min. bei 90–95 % HFmax (je 5 Min. Pause) → 15 Min. Ausrollen.`,
+      longride: `${h} Std. langer Ausritt. Konstantes GA1-Tempo, Verpflegungsstrategie üben, gleichmäßige Belastung.`,
+      raceday:  `${h} Std. Rennsimulation. Abschnitte bei Zielgeschwindigkeit ${goal?.targetSpeedKmh||25} km/h, Rennernährung und Taktik testen.`,
+    })[type] || '';
+  }
+
+  function generateTrainingPlan(profile, goal) {
+    const today = new Date();
+    const target = new Date(goal.targetDate);
+    const weeksTotal = Math.max(4, Math.round((target - today) / 604800000));
+    const taperW = Math.max(1, Math.min(2, Math.floor(weeksTotal * 0.1)));
+    const peakW  = Math.max(1, Math.min(4, Math.floor(weeksTotal * 0.15)));
+    const buildW = Math.max(2, Math.floor(weeksTotal * 0.35));
+    const baseW  = Math.max(1, weeksTotal - taperW - peakW - buildW);
+    const startHrs = {beginner:3, intermediate:5, advanced:8}[profile.fitnessLevel]||5;
+    const raceHrs  = goal.distanceKm / goal.targetSpeedKmh;
+    const peakHrs  = Math.min(raceHrs*0.85, {beginner:8, intermediate:15, advanced:22}[profile.fitnessLevel]||15);
+    const SPDMAP   = {rest:0,recovery:20,ga1:24,ga2:28,kb:22,interval:27,longride:23,raceday:goal.targetSpeedKmh};
+    const TPL = {
+      beginner:{
+        base: [{t:'rest'},{t:'ga1',h:.30},{t:'rest'},{t:'rest'},{t:'ga1',h:.40},{t:'ga1',h:.20},{t:'rest'}],
+        build:[{t:'rest'},{t:'ga1',h:.28},{t:'rest'},{t:'ga2',h:.25},{t:'rest'},{t:'longride',h:.47},{t:'rest'}],
+        peak: [{t:'rest'},{t:'ga2',h:.28},{t:'rest'},{t:'rest'},{t:'interval',h:.22},{t:'longride',h:.50},{t:'rest'}],
+        taper:[{t:'rest'},{t:'ga1',h:.30},{t:'rest'},{t:'rest'},{t:'recovery',h:.20},{t:'rest'},{t:'rest'}],
+      },
+      intermediate:{
+        base: [{t:'recovery',h:.10},{t:'ga1',h:.22},{t:'rest'},{t:'ga1',h:.18},{t:'ga2',h:.20},{t:'longride',h:.38},{t:'rest'}],
+        build:[{t:'recovery',h:.08},{t:'interval',h:.18},{t:'rest'},{t:'ga1',h:.18},{t:'ga2',h:.20},{t:'longride',h:.48},{t:'rest'}],
+        peak: [{t:'rest'},{t:'interval',h:.18},{t:'rest'},{t:'ga2',h:.18},{t:'ga1',h:.14},{t:'raceday',h:.50},{t:'rest'}],
+        taper:[{t:'rest'},{t:'ga1',h:.22},{t:'recovery',h:.10},{t:'rest'},{t:'ga1',h:.18},{t:'recovery',h:.10},{t:'rest'}],
+      },
+      advanced:{
+        base: [{t:'recovery',h:.07},{t:'ga1',h:.18},{t:'kb',h:.12},{t:'ga1',h:.18},{t:'ga2',h:.18},{t:'longride',h:.42},{t:'rest'}],
+        build:[{t:'recovery',h:.07},{t:'interval',h:.17},{t:'kb',h:.12},{t:'ga2',h:.17},{t:'ga2',h:.17},{t:'longride',h:.47},{t:'rest'}],
+        peak: [{t:'recovery',h:.07},{t:'interval',h:.18},{t:'rest'},{t:'ga2',h:.17},{t:'raceday',h:.23},{t:'longride',h:.48},{t:'rest'}],
+        taper:[{t:'rest'},{t:'ga1',h:.22},{t:'recovery',h:.10},{t:'rest'},{t:'ga1',h:.18},{t:'recovery',h:.10},{t:'rest'}],
+      },
+    };
+    const fl  = profile.fitnessLevel;
+    const tpl = TPL[fl]||TPL.intermediate;
+    const DAYS = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+    // Start Monday of current week
+    const dow = today.getDay();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - (dow===0?6:dow-1));
+    startDate.setHours(0,0,0,0);
+    const weeks = [];
+    for(let w=0;w<weeksTotal;w++){
+      const phase = w<baseW?'base':w<baseW+buildW?'build':w<baseW+buildW+peakW?'peak':'taper';
+      let vf;
+      if(phase==='base')  vf=0.50+(w/Math.max(1,baseW))*0.35;
+      else if(phase==='build') vf=0.75+((w-baseW)/Math.max(1,buildW))*0.25;
+      else if(phase==='peak')  vf=1.0;
+      else vf=0.55-((w-(weeksTotal-taperW))/Math.max(1,taperW))*0.20;
+      const weekHrs = Math.max(1, startHrs+(peakHrs-startHrs)*vf);
+      const wStart = new Date(startDate); wStart.setDate(startDate.getDate()+w*7);
+      const wEnd   = new Date(wStart);    wEnd.setDate(wStart.getDate()+6);
+      const sessions = tpl[phase].map((s,di)=>{
+        const sd=new Date(wStart); sd.setDate(wStart.getDate()+di);
+        const durMin = s.h?Math.max(20,Math.round(weekHrs*s.h*60/5)*5):0;
+        const distKm = s.h?Math.max(0,Math.round(weekHrs*s.h*(SPDMAP[s.t]||24)/5)*5):0;
+        return{id:`w${w+1}d${di+1}`,date:sd.toISOString().slice(0,10),dayShort:DAYS[di],type:s.t,durationMin:durMin,distanceKm:distKm,description:sessionDesc(s.t,durMin,goal)};
+      });
+      const fmt=d=>d.toLocaleDateString('de',{day:'2-digit',month:'2-digit'});
+      weeks.push({weekNumber:w+1,phase,phaseName:PHASE_META[phase].label,weekHrs:Math.round(weekHrs*10)/10,weekKm:sessions.reduce((a,s)=>a+s.distanceKm,0),dateRange:`${fmt(wStart)} – ${fmt(wEnd)}`,sessions});
+    }
+    return{id:Date.now(),createdAt:new Date().toISOString(),profile,goal,weeks};
   }
 
   // ── Shared location search component ─────────────────────────────────────
@@ -642,6 +787,253 @@
     );
   }
 
+  // ── Trainer: Setup form ───────────────────────────────────────────────────
+  function TrainerSetup({onCreate}){
+    const [step,setStep]=useState(1);
+    const [profile,setProfile]=useState({age:'',weight:'',fitnessLevel:'intermediate',weeklyKm:'',ftp:''});
+    const [goal,setGoal]=useState({eventName:'',targetDate:'',distanceKm:'',targetSpeedKmh:''});
+    const sp=k=>v=>setProfile(p=>({...p,[k]:v}));
+    const sg=k=>v=>setGoal(g=>({...g,[k]:v}));
+    const fitOpts=[
+      {id:'beginner',   icon:'🌱',label:'Einsteiger',      sub:'< 50 km/Woche'},
+      {id:'intermediate',icon:'🚴',label:'Fortgeschritten',sub:'50–150 km/Woche'},
+      {id:'advanced',   icon:'🏆',label:'Erfahren',        sub:'> 150 km/Woche'},
+    ];
+    const ok1=profile.age&&profile.weight;
+    const ok2=goal.targetDate&&goal.distanceKm&&goal.targetSpeedKmh;
+    const raceHrs=ok2?parseFloat(goal.distanceKm)/parseFloat(goal.targetSpeedKmh):0;
+    return(
+      <div className="setup-card">
+        <div className="setup-title">🏋️ Trainingsberater</div>
+        <div className="setup-subtitle">Gib dein Profil und Ziel ein — du bekommst einen personalisierten Trainingsplan.</div>
+        <div className="step-indicator">
+          {[1,2].map(n=>(
+            <React.Fragment key={n}>
+              <div className="step-dot" style={{width:step===n?12:8,height:step===n?12:8,background:step>=n?'#6366f1':'#334155'}}/>
+              {n<2&&<div style={{flex:1,height:2,background:'#334155',borderRadius:1}}/>}
+            </React.Fragment>
+          ))}
+          <span style={{fontSize:11,color:'#64748b',marginLeft:8}}>Schritt {step} von 2</span>
+        </div>
+        {step===1&&(
+          <>
+            <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:12}}>Dein aktueller Stand</div>
+            <div className="log-grid2">
+              <div className="log-field"><label>Alter (Jahre)</label><input className="log-input" type="number" min="10" max="90" value={profile.age} onChange={e=>sp('age')(e.target.value)} placeholder="z. B. 38"/></div>
+              <div className="log-field"><label>Gewicht (kg)</label><input className="log-input" type="number" min="30" max="200" value={profile.weight} onChange={e=>sp('weight')(e.target.value)} placeholder="z. B. 75"/></div>
+              <div className="log-field"><label>Aktuelle km/Woche</label><input className="log-input" type="number" min="0" value={profile.weeklyKm} onChange={e=>sp('weeklyKm')(e.target.value)} placeholder="z. B. 80"/></div>
+              <div className="log-field"><label>FTP (Watt, optional)</label><input className="log-input" type="number" min="0" value={profile.ftp} onChange={e=>sp('ftp')(e.target.value)} placeholder="z. B. 220"/></div>
+            </div>
+            <div className="log-field" style={{marginBottom:16}}>
+              <label>Fitnesslevel</label>
+              <div className="fitness-options">
+                {fitOpts.map(f=>(
+                  <div key={f.id} className={`fitness-opt ${profile.fitnessLevel===f.id?'active':''}`} onClick={()=>sp('fitnessLevel')(f.id)}>
+                    <div className="fitness-opt-icon">{f.icon}</div>
+                    <div className="fitness-opt-label">{f.label}</div>
+                    <div className="fitness-opt-sub">{f.sub}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button className="btn-primary indigo" onClick={()=>setStep(2)} disabled={!ok1}>Weiter →</button>
+          </>
+        )}
+        {step===2&&(
+          <>
+            <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:12}}>Dein Wettkampfziel</div>
+            <div className="log-field"><label>Veranstaltung / Rennen (optional)</label><input className="log-input" type="text" value={goal.eventName} onChange={e=>sg('eventName')(e.target.value)} placeholder="z. B. Ötztal Radmarathon 2026"/></div>
+            <div className="log-grid2">
+              <div className="log-field"><label>Zieldatum</label><input className="log-input" type="date" value={goal.targetDate} onChange={e=>sg('targetDate')(e.target.value)} min={new Date().toISOString().slice(0,10)}/></div>
+              <div className="log-field"><label>Zieldistanz (km)</label><input className="log-input" type="number" min="20" value={goal.distanceKm} onChange={e=>sg('distanceKm')(e.target.value)} placeholder="z. B. 200"/></div>
+              <div className="log-field"><label>Zielschnitt (km/h)</label><input className="log-input" type="number" min="10" max="50" step="0.5" value={goal.targetSpeedKmh} onChange={e=>sg('targetSpeedKmh')(e.target.value)} placeholder="z. B. 26"/></div>
+            </div>
+            {ok2&&raceHrs>0&&(
+              <div style={{background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#a5b4fc',marginBottom:14}}>
+                Geschätzte Renndauer: {Math.floor(raceHrs)}h {Math.round((raceHrs%1)*60)}min &nbsp;·&nbsp; Plan: {Math.max(4,Math.round((new Date(goal.targetDate)-new Date())/604800000))} Wochen
+              </div>
+            )}
+            <div style={{display:'flex',gap:8}}>
+              <button className="btn-sm" onClick={()=>setStep(1)}>← Zurück</button>
+              <button className="btn-primary indigo" style={{flex:1}} disabled={!ok2}
+                onClick={()=>onCreate(
+                  {age:+profile.age,weight:+profile.weight,fitnessLevel:profile.fitnessLevel,weeklyKm:+profile.weeklyKm||0,ftp:+profile.ftp||null},
+                  {eventName:goal.eventName,targetDate:goal.targetDate,distanceKm:+goal.distanceKm,targetSpeedKmh:+goal.targetSpeedKmh}
+                )}>🏋️ Trainingsplan erstellen</button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ── Trainer: Session log modal ────────────────────────────────────────────
+  function SessionLogModal({session,week,existing,onSave,onSkip,onClose}){
+    const meta=SESSION_META[session.type]||SESSION_META.ga1;
+    const isRest=session.type==='rest';
+    const [form,setForm]=useState(existing||{distanceKm:session.distanceKm||'',avgSpeed:'',avgHR:'',maxHR:'',elevationM:'',rpe:0,notes:''});
+    const set=k=>v=>setForm(f=>({...f,[k]:v}));
+    const rpeColor=n=>n<=3?'#22c55e':n<=6?'#f59e0b':n<=8?'#f97316':'#ef4444';
+    return(
+      <div className="log-overlay" onClick={onClose}>
+        <div className="log-modal" onClick={e=>e.stopPropagation()}>
+          <div className="log-modal-header">
+            <div style={{width:42,height:42,borderRadius:10,background:`${meta.color}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{meta.emoji}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:15,fontWeight:700,color:'#f8fafc'}}>{session.dayShort} — {meta.label}</div>
+              <div style={{fontSize:11,color:'#64748b'}}>{session.date} · Woche {week.weekNumber} · {week.phaseName}</div>
+            </div>
+            <button style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18,lineHeight:1}} onClick={onClose}>✕</button>
+          </div>
+          <div className="log-modal-body">
+            <div className="desc-box" style={{borderLeftColor:meta.color}}>{session.description}</div>
+            {isRest?(
+              <div style={{textAlign:'center',padding:'16px 0',color:'#64748b',fontSize:13}}>Ruhetag — kein Training, kein Leistungseintrag nötig.</div>
+            ):(
+              <>
+                <div className="log-grid2">
+                  <div className="log-field"><label>Distanz (km)</label><input className="log-input" type="number" step="0.1" min="0" value={form.distanceKm} onChange={e=>set('distanceKm')(e.target.value)} placeholder={`Ziel: ${session.distanceKm} km`}/></div>
+                  <div className="log-field"><label>Ø Geschwindigkeit (km/h)</label><input className="log-input" type="number" step="0.1" min="0" value={form.avgSpeed} onChange={e=>set('avgSpeed')(e.target.value)}/></div>
+                  <div className="log-field"><label>Ø Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.avgHR} onChange={e=>set('avgHR')(e.target.value)}/></div>
+                  <div className="log-field"><label>Max Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.maxHR} onChange={e=>set('maxHR')(e.target.value)}/></div>
+                  <div className="log-field"><label>Höhenmeter (m)</label><input className="log-input" type="number" min="0" value={form.elevationM} onChange={e=>set('elevationM')(e.target.value)}/></div>
+                </div>
+                <div className="log-field">
+                  <label>Wahrgenommene Anstrengung (RPE 1–10)</label>
+                  <div className="rpe-row">
+                    {[1,2,3,4,5,6,7,8,9,10].map(n=>(
+                      <button key={n} className={`rpe-btn ${form.rpe===n?'active':''}`}
+                        style={form.rpe===n?{background:rpeColor(n),borderColor:rpeColor(n),color:'#fff'}:{}}
+                        onClick={()=>set('rpe')(n)}>{n}</button>
+                    ))}
+                  </div>
+                  <div style={{fontSize:10,color:'#475569',marginTop:3}}>1–3 leicht · 4–6 mittel · 7–8 hart · 9–10 maximal</div>
+                </div>
+                <div className="log-field">
+                  <label>Notizen</label>
+                  <textarea className="log-input" rows={3} value={form.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Wie war die Einheit? Besonderheiten?" style={{resize:'vertical'}}/>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="log-modal-footer">
+            <button className="btn-sm" style={{color:'#f87171',borderColor:'rgba(239,68,68,0.3)'}} onClick={onSkip}>⏭️ Überspringen</button>
+            <div style={{flex:1}}/>
+            {isRest
+              ?<button className="btn-sm hi" onClick={()=>onSave({rpe:0,notes:form.notes,skipped:false})}>✅ Ruhetag bestätigen</button>
+              :<button className="btn-sm hi" onClick={()=>onSave({...form,skipped:false})}>💾 Einheit speichern</button>
+            }
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Trainer: Plan view ────────────────────────────────────────────────────
+  function TrainerPlanView({plan,logs,onLog,onDeletePlan}){
+    const [modal,setModal]=useState(null);
+    const [expandedWeek,setExpandedWeek]=useState(null);
+    const today=new Date().toISOString().slice(0,10);
+    const daysLeft=Math.max(0,Math.round((new Date(plan.goal.targetDate)-new Date())/86400000));
+    const weeksLeft=Math.ceil(daysLeft/7);
+    const allSess=plan.weeks.flatMap(w=>w.sessions);
+    const active=allSess.filter(s=>s.type!=='rest');
+    const done=active.filter(s=>logs[s.id]&&!logs[s.id].skipped);
+    const totalKm=done.reduce((a,s)=>a+(parseFloat(logs[s.id]?.distanceKm)||0),0);
+    const pct=Math.round(done.length/Math.max(1,active.length)*100);
+    const curWeekIdx=plan.weeks.findIndex(w=>{const d0=w.sessions[0]?.date,d6=w.sessions[6]?.date;return today>=d0&&today<=d6;});
+    useEffect(()=>{if(curWeekIdx>=0&&expandedWeek===null)setExpandedWeek(curWeekIdx);},[curWeekIdx]);
+    const raceHrs=plan.goal.distanceKm/plan.goal.targetSpeedKmh;
+    return(
+      <div>
+        {/* Goal/progress header */}
+        <div className="trainer-progress">
+          <div className="trainer-goal-row">
+            <span className="trainer-goal-label">🏆 {plan.goal.eventName||'Trainingsplan'}</span>
+            <div className="trainer-goal-meta">
+              <span>📅 {new Date(plan.goal.targetDate).toLocaleDateString('de',{day:'2-digit',month:'long',year:'numeric'})}</span>
+              <span>·</span><span>📏 {plan.goal.distanceKm} km</span>
+              <span>·</span><span>⚡ {plan.goal.targetSpeedKmh} km/h</span>
+              <span>·</span><span>⏱️ {Math.floor(raceHrs)}h{Math.round((raceHrs%1)*60)}min</span>
+            </div>
+          </div>
+          <div style={{background:'#334155',borderRadius:6,height:6,marginBottom:12,overflow:'hidden'}}>
+            <div style={{height:'100%',background:'linear-gradient(90deg,#22c55e,#3b82f6)',borderRadius:6,width:`${pct}%`,transition:'width 0.5s'}}/>
+          </div>
+          <div className="trainer-stat-row">
+            {[{v:weeksLeft,l:'Wochen noch'},{v:`${pct}%`,l:'Abgeschlossen'},{v:done.length,l:'Einheiten ok'},{v:`${Math.round(totalKm)} km`,l:'Gefahren'}].map(({v,l})=>(
+              <div key={l} className="trainer-stat"><div className="trainer-stat-val">{v}</div><div className="trainer-stat-lbl">{l}</div></div>
+            ))}
+          </div>
+          <div style={{marginTop:12,display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+            <span style={{fontSize:11,color:'#475569',flex:1}}>Fitnesslevel: {plan.profile.fitnessLevel} · Alter: {plan.profile.age} J. · Gewicht: {plan.profile.weight} kg</span>
+            <button className="btn-danger" onClick={onDeletePlan}>🗑️ Plan löschen</button>
+          </div>
+        </div>
+
+        {/* Weeks */}
+        {plan.weeks.map((week,wi)=>{
+          const isOpen=expandedWeek===wi;
+          const isCur=wi===curWeekIdx;
+          const ph=PHASE_META[week.phase];
+          const wActive=week.sessions.filter(s=>s.type!=='rest');
+          const wDone=wActive.filter(s=>logs[s.id]&&!logs[s.id].skipped);
+          const wFull=wActive.length>0&&wDone.length===wActive.length;
+          return(
+            <div key={wi} className="week-row" style={isCur?{borderColor:'#3b82f6',boxShadow:'0 0 0 1px rgba(59,130,246,0.15)'}:{}}>
+              <div className="week-header" onClick={()=>setExpandedWeek(isOpen?-1:wi)}>
+                <span style={{fontSize:11,fontWeight:700,color:'#64748b',minWidth:28}}>W{week.weekNumber}</span>
+                <span className="week-phase-badge" style={{background:`${ph.color}20`,color:ph.color}}>{week.phaseName}</span>
+                {isCur&&<span style={{fontSize:10,background:'rgba(59,130,246,0.18)',color:'#60a5fa',padding:'2px 7px',borderRadius:10,fontWeight:600}}>▶ Diese Woche</span>}
+                <span style={{flex:1}}/>
+                <span style={{fontSize:11,color:'#64748b'}}>{week.dateRange} · {week.weekHrs}h · {week.weekKm}km</span>
+                {wFull&&<span style={{fontSize:13,marginLeft:6}}>✅</span>}
+                {!wFull&&wDone.length>0&&<span style={{fontSize:11,color:'#60a5fa',marginLeft:6}}>{wDone.length}/{wActive.length}</span>}
+                <span style={{color:'#64748b',fontSize:12,marginLeft:6}}>{isOpen?'▲':'▼'}</span>
+              </div>
+              {isOpen&&(
+                <div className="week-sessions">
+                  {week.sessions.map(sess=>{
+                    const m=SESSION_META[sess.type]||SESSION_META.ga1;
+                    const lg=logs[sess.id];
+                    const isDone=lg&&!lg.skipped;
+                    const isSkip=lg?.skipped;
+                    return(
+                      <div key={sess.id} className="session-chip"
+                        style={{background:`${m.color}18`,borderColor:isDone?m.color:isSkip?'#334155':'transparent',opacity:isSkip?0.4:1}}
+                        onClick={()=>setModal({session:sess,week})}>
+                        <span className="session-chip-day">{sess.dayShort}</span>
+                        <span style={{fontSize:20}}>{m.emoji}</span>
+                        <span className="session-chip-type" style={{color:m.color}}>{m.label}</span>
+                        {sess.durationMin>0&&<span className="session-chip-dur">{sess.durationMin}min</span>}
+                        {sess.distanceKm>0&&<span className="session-chip-dur">{sess.distanceKm}km</span>}
+                        {isDone&&<div className="chip-badge" style={{background:'#22c55e'}}>✓</div>}
+                        {isSkip&&<div className="chip-badge" style={{background:'#ef4444'}}>–</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {modal&&(
+          <SessionLogModal session={modal.session} week={modal.week} existing={logs[modal.session.id]||null}
+            onSave={lg=>{onLog(modal.session.id,lg);setModal(null);}}
+            onSkip={()=>{onLog(modal.session.id,{skipped:true});setModal(null);}}
+            onClose={()=>setModal(null)}/>
+        )}
+      </div>
+    );
+  }
+
+  // ── Trainer: Panel wrapper ────────────────────────────────────────────────
+  function TrainerPanel({plan,logs,onCreatePlan,onLogSession,onDeletePlan}){
+    if(!plan)return <TrainerSetup onCreate={onCreatePlan}/>;
+    return <TrainerPlanView plan={plan} logs={logs} onLog={onLogSession} onDeletePlan={onDeletePlan}/>;
+  }
+
   // ── App ───────────────────────────────────────────────────────────────────
   function App(){
     // shared
@@ -667,6 +1059,10 @@
     const [manRoute,setManRoute]=useState(null);
     const [manLoading,setManLoading]=useState(false);
     const [manError,setManError]=useState('');
+
+    // trainer
+    const [trainingPlan,setTrainingPlan]=useState(null);
+    const [trainingLogs,setTrainingLogs]=useState({});
     const manWpRef=useRef([]);
     const manReqId=useRef(0);
 
@@ -724,6 +1120,15 @@
       const l=[...manWpRef.current];
       if(l[i]){l[i]={...l[i],name};manWpRef.current=l;setManWaypoints([...l]);}
     },[recalcManual,manPref,manLoop]);
+
+    // ── Trainer callbacks ──
+    const createTrainingPlan=useCallback((profile,goal)=>{
+      setTrainingPlan(generateTrainingPlan(profile,goal));
+      setTrainingLogs({});
+      setActiveTab('trainer');
+    },[]);
+    const logTrainingSession=useCallback((id,log)=>setTrainingLogs(l=>({...l,[id]:log})),[]);
+    const deleteTrainingPlan=useCallback(()=>{setTrainingPlan(null);setTrainingLogs({});},[]);
 
     return(
       <>
@@ -852,6 +1257,7 @@
           <div className="tabs">
             <button className={`tab ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>🗺️ Routen{planMode==='roundtrip'&&rtRoutes.length>0?` (${rtRoutes.length})`:planMode==='manual'&&manRoute?' (1)':''}</button>
             <button className={`tab ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>💾 Gespeichert{savedTours.length>0?` (${savedTours.length})`:''}</button>
+            <button className={`tab ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>🏋️ Trainer{trainingPlan?' ✓':''}</button>
             <button className={`tab ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>👤 Profil</button>
           </div>
 
@@ -891,6 +1297,11 @@
             savedTours.length===0
               ?<div className="empty-state"><div className="empty-icon">🗺️</div><div className="empty-title">Noch keine Touren gespeichert</div><div className="empty-text">Plane eine Route und speichere sie hier.</div></div>
               :<div>{savedTours.map((t,i)=><SavedRouteCard key={i} tour={t} index={i} onDelete={j=>setSavedTours(p=>p.filter((_,k)=>k!==j))}/>)}</div>
+          )}
+
+          {activeTab==='trainer'&&(
+            <TrainerPanel plan={trainingPlan} logs={trainingLogs}
+              onCreatePlan={createTrainingPlan} onLogSession={logTrainingSession} onDeletePlan={deleteTrainingPlan}/>
           )}
 
           {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile}/>}
