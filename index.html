@@ -19,153 +19,181 @@
 
     /* ── Sidebar ── */
     .sidebar { width: 340px; min-width: 340px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; overflow-y: auto; height: 100vh; position: sticky; top: 0; }
-    .sidebar-header { padding: 24px 20px 16px; border-bottom: 1px solid #334155; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
-    .app-title { font-size: 20px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 10px; }
-    .app-subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
-    .sidebar-section { padding: 16px 20px; border-bottom: 1px solid #2d3f55; }
-    .section-title { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
-    .form-group { margin-bottom: 12px; }
+    .sidebar-header { padding: 20px 20px 14px; border-bottom: 1px solid #334155; background: linear-gradient(135deg,#1e293b,#0f172a); }
+    .app-title { font-size: 19px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 10px; }
+    .app-subtitle { font-size: 11px; color: #64748b; margin-top: 3px; }
+    .sidebar-section { padding: 14px 16px; border-bottom: 1px solid #2d3f55; }
+    .section-title { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+    .form-group { margin-bottom: 10px; }
     label { font-size: 13px; color: #94a3b8; margin-bottom: 4px; display: block; }
-    input[type="text"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    input[type="text"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px 11px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s; }
     input[type="text"]:focus { border-color: #3b82f6; }
     input[type="range"] { width: 100%; cursor: pointer; accent-color: #3b82f6; margin-top: 4px; }
-    .range-display { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; }
-    .range-value { font-size: 22px; font-weight: 700; color: #3b82f6; }
+    .range-display { display: flex; justify-content: space-between; align-items: baseline; margin-top: 3px; }
+    .range-value { font-size: 20px; font-weight: 700; color: #3b82f6; }
     .range-unit { font-size: 12px; color: #64748b; }
 
-    /* ── Location autocomplete ── */
+    /* ── Mode tabs in sidebar ── */
+    .mode-tabs { display: flex; gap: 2px; padding: 4px; background: #0f172a; border-radius: 10px; border: 1px solid #334155; margin-bottom: 0; }
+    .mode-tab { flex: 1; padding: 7px 10px; background: transparent; border: none; color: #64748b; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 7px; transition: all 0.2s; text-align: center; }
+    .mode-tab.active { background: #3b82f6; color: white; }
+
+    /* ── Manual waypoint list in sidebar ── */
+    .mwp-list { }
+    .mwp-empty { font-size: 12px; color: #475569; padding: 8px 0 12px; line-height: 1.5; }
+    .mwp-row { display: flex; align-items: center; gap: 7px; padding: 6px 0; border-bottom: 1px solid #1e293b; }
+    .mwp-badge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; background: #6366f1; color: #fff; }
+    .mwp-badge.first { background: rgba(34,197,94,0.25); font-size: 13px; }
+    .mwp-badge.last  { background: rgba(239,68,68,0.25); font-size: 13px; }
+    .mwp-name { flex: 1; font-size: 12px; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .mwp-actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .mwp-btn { background: none; border: 1px solid #334155; color: #64748b; border-radius: 4px; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .mwp-btn:hover:not(:disabled) { background: #334155; color: #f8fafc; }
+    .mwp-btn:disabled { opacity: 0.2; cursor: default; }
+    .mwp-btn.del { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.07); }
+    .mwp-btn.del:hover { background: rgba(239,68,68,0.2); }
+
+    /* ── Pref selector ── */
+    .pref-row { display: flex; gap: 4px; }
+    .pref-btn { flex: 1; padding: 5px 4px; background: #0f172a; color: #64748b; border: 1px solid #334155; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .pref-btn.active { background: rgba(99,102,241,0.15); border-color: #6366f1; color: #a5b4fc; }
+
+    /* ── Location autocomplete (shared) ── */
     .loc-wrap { position: relative; }
-    .loc-hint { font-size: 11px; color: #475569; margin-top: 4px; }
-    .loc-confirmed { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; margin-top: 5px; }
+    .loc-hint { font-size: 11px; color: #475569; margin-top: 3px; }
+    .loc-confirmed { display: flex; align-items: flex-start; gap: 5px; font-size: 12px; margin-top: 4px; }
     .loc-confirmed-text { color: #86efac; flex: 1; line-height: 1.4; }
-    .loc-clear { background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; flex-shrink: 0; }
+    .loc-clear { background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px; padding: 0; }
     .loc-clear:hover { color: #f87171; }
-    .loc-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 10px; z-index: 9999; max-height: 220px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-    .loc-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #334155; transition: background 0.15s; }
+    .loc-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 10px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .loc-item { padding: 8px 11px; cursor: pointer; border-bottom: 1px solid #334155; transition: background 0.12s; }
     .loc-item:last-child { border-bottom: none; }
     .loc-item:hover { background: #334155; }
-    .loc-item-name { font-size: 13px; font-weight: 500; color: #e2e8f0; margin-bottom: 2px; }
+    .loc-item-name { font-size: 12px; font-weight: 500; color: #e2e8f0; margin-bottom: 1px; }
     .loc-item-detail { font-size: 10px; color: #475569; }
 
     /* ── Surface chips ── */
-    .surface-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .surface-chip { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #334155; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #0f172a; font-size: 13px; color: #94a3b8; user-select: none; }
+    .surface-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .surface-chip { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid #334155; border-radius: 7px; cursor: pointer; transition: all 0.2s; background: #0f172a; font-size: 12px; color: #94a3b8; user-select: none; }
     .surface-chip.active { border-color: #3b82f6; background: rgba(59,130,246,0.1); color: #93c5fd; }
 
-    .api-key-notice { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #fcd34d; margin-bottom: 12px; line-height: 1.5; }
+    .api-key-notice { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 7px; padding: 9px 11px; font-size: 11px; color: #fcd34d; margin-bottom: 10px; line-height: 1.5; }
     .api-key-notice a { color: #fbbf24; }
 
     /* ── Buttons ── */
-    .btn-primary { width: 100%; padding: 12px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { width: 100%; padding: 11px; background: linear-gradient(135deg,#3b82f6,#2563eb); color: white; border: none; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 7px; }
     .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(59,130,246,0.4); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn-sm { padding: 6px 12px; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 7px; font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-primary.indigo { background: linear-gradient(135deg,#6366f1,#4f46e5); }
+    .btn-primary.indigo:hover { box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+    .btn-sm { padding: 6px 11px; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 7px; font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .btn-sm:hover { background: #334155; color: #f8fafc; }
     .btn-sm.hi { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #93c5fd; }
-    .btn-danger { padding: 5px 10px; background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .btn-danger { padding: 5px 9px; background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 12px; cursor: pointer; }
     .btn-danger:hover { background: rgba(239,68,68,0.2); }
 
     /* ── Main ── */
-    .main { flex: 1; padding: 24px; overflow-y: auto; background: #0f172a; }
-    .tabs { display: flex; gap: 2px; margin-bottom: 24px; background: #1e293b; padding: 4px; border-radius: 12px; border: 1px solid #334155; }
-    .tab { flex: 1; padding: 8px 16px; background: transparent; border: none; color: #64748b; font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 9px; transition: all 0.2s; }
+    .main { flex: 1; padding: 22px; overflow-y: auto; background: #0f172a; }
+    .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: #1e293b; padding: 4px; border-radius: 11px; border: 1px solid #334155; }
+    .tab { flex: 1; padding: 8px 14px; background: transparent; border: none; color: #64748b; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
     .tab.active { background: #3b82f6; color: white; }
 
     /* ── Spinners ── */
     .spinner-overlay { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; color: #64748b; }
-    .spinner { width: 48px; height: 48px; border: 3px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+    .spinner { width: 44px; height: 44px; border: 3px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .spin-inline { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .spin-inline { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
     .spin-sm { display: inline-block; width: 11px; height: 11px; border: 2px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-    .error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 14px 18px; color: #f87171; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
+    .error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 11px; padding: 13px 16px; color: #f87171; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px; }
 
     /* ── Route cards ── */
-    .routes-grid { display: grid; gap: 20px; }
-    .route-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; transition: border-color 0.2s; }
+    .routes-grid { display: grid; gap: 18px; }
+    .route-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden; transition: border-color 0.2s; }
     .route-card.selected { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
-    .route-card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: linear-gradient(135deg, #1e293b 0%, #162032 100%); }
-    .route-type-badge { display: flex; align-items: center; gap: 10px; }
-    .route-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .route-card-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: linear-gradient(135deg,#1e293b,#162032); }
+    .route-type-badge { display: flex; align-items: center; gap: 9px; }
+    .route-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 19px; }
     .route-icon.flat     { background: rgba(34,197,94,0.15); }
     .route-icon.hilly    { background: rgba(245,158,11,0.15); }
     .route-icon.mountain { background: rgba(239,68,68,0.15); }
-    .route-name { font-size: 16px; font-weight: 600; color: #f8fafc; }
-    .route-tagline { font-size: 12px; color: #64748b; margin-top: 2px; }
-    .difficulty-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .route-icon.manual   { background: rgba(99,102,241,0.15); }
+    .route-name { font-size: 15px; font-weight: 600; color: #f8fafc; }
+    .route-tagline { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .difficulty-badge { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .diff-easy    { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
     .diff-medium  { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
     .diff-hard    { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
     .diff-extreme { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
     .route-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #334155; border-top: 1px solid #334155; }
-    .stat-item { background: #0f172a; padding: 12px; text-align: center; }
-    .stat-value { font-size: 18px; font-weight: 700; color: #f8fafc; }
-    .stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .stat-item { background: #0f172a; padding: 11px; text-align: center; }
+    .stat-value { font-size: 17px; font-weight: 700; color: #f8fafc; }
+    .stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
 
     /* ── Edit toolbar ── */
-    .edit-toolbar { padding: 10px 16px; border-top: 1px solid #334155; display: flex; gap: 8px; align-items: center; background: rgba(15,23,42,0.5); flex-wrap: wrap; }
-    .edit-toolbar-label { font-size: 12px; color: #64748b; flex: 1; min-width: 100px; display: flex; align-items: center; gap: 6px; }
+    .edit-toolbar { padding: 9px 14px; border-top: 1px solid #334155; display: flex; gap: 7px; align-items: center; background: rgba(15,23,42,0.5); flex-wrap: wrap; }
+    .edit-toolbar-label { font-size: 12px; color: #64748b; flex: 1; min-width: 80px; display: flex; align-items: center; gap: 5px; }
 
-    /* ── Waypoint panel ── */
-    .wp-panel { border-top: 1px solid #334155; background: #090f1a; }
-    .wp-header { padding: 9px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; border-bottom: 1px solid #1e293b; user-select: none; }
-    .wp-header:hover { background: rgba(255,255,255,0.02); }
-    .wp-header-label { font-size: 12px; font-weight: 600; color: #94a3b8; flex: 1; }
-    .wp-header-toggle { font-size: 11px; color: #475569; }
-    .wp-body { }
-    .wp-row { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid #0f172a; min-height: 36px; }
-    .wp-row.fixed { background: rgba(34,197,94,0.03); }
-    .wp-badge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-    .wp-badge.via { background: #f59e0b; color: #fff; }
-    .wp-badge.start { background: rgba(34,197,94,0.2); font-size: 13px; }
-    .wp-badge.end { background: rgba(239,68,68,0.2); font-size: 13px; }
-    .wp-name { flex: 1; font-size: 12px; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .wp-name.fixed { color: #86efac; }
-    .wp-actions { display: flex; gap: 3px; flex-shrink: 0; }
-    .wp-btn { background: none; border: 1px solid #334155; color: #64748b; border-radius: 4px; width: 22px; height: 22px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; padding: 0; }
-    .wp-btn:hover:not(:disabled) { background: #334155; color: #f8fafc; }
-    .wp-btn:disabled { opacity: 0.25; cursor: default; }
-    .wp-btn.del { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.07); }
-    .wp-btn.del:hover { background: rgba(239,68,68,0.2); }
-    .wp-search { padding: 8px 14px; border-top: 1px solid #1e293b; position: relative; }
+    /* ── Waypoint panel inside route card (below map) ── */
+    .wpp { border-top: 1px solid #334155; background: #090f1a; }
+    .wpp-header { padding: 8px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; border-bottom: 1px solid #1e293b; }
+    .wpp-header:hover { background: rgba(255,255,255,0.02); }
+    .wpp-header-label { font-size: 12px; font-weight: 600; color: #94a3b8; flex: 1; }
+    .wpp-row { display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-bottom: 1px solid #0f172a; }
+    .wpp-row.fixed { background: rgba(34,197,94,0.03); }
+    .wpp-badge { width: 21px; height: 21px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .wpp-badge.via { background: #f59e0b; color: #fff; }
+    .wpp-badge.se { font-size: 13px; }
+    .wpp-name { flex: 1; font-size: 12px; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wpp-name.fixed { color: #86efac; }
+    .wpp-actions { display: flex; gap: 3px; flex-shrink: 0; }
+    .wpp-btn { background: none; border: 1px solid #334155; color: #64748b; border-radius: 4px; width: 21px; height: 21px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+    .wpp-btn:hover:not(:disabled) { background: #334155; color: #f8fafc; }
+    .wpp-btn:disabled { opacity: 0.2; cursor: default; }
+    .wpp-btn.del { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.07); }
+    .wpp-btn.del:hover { background: rgba(239,68,68,0.2); }
+    .wpp-search { padding: 7px 12px; border-top: 1px solid #1e293b; }
 
     /* ── Map ── */
     .map-wrap { position: relative; }
     .route-map { height: 280px; background: #0a1628; }
     .route-map.edit { height: 300px; }
-    .map-hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(9,15,26,0.92); color: #94a3b8; padding: 5px 14px; border-radius: 20px; font-size: 11px; z-index: 999; white-space: nowrap; border: 1px solid #334155; pointer-events: none; }
-    .map-rerouting { position: absolute; top: 10px; right: 10px; background: rgba(9,15,26,0.92); color: #60a5fa; padding: 5px 12px; border-radius: 8px; font-size: 12px; z-index: 999; display: flex; align-items: center; gap: 6px; border: 1px solid #334155; }
+    .map-hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(9,15,26,0.92); color: #94a3b8; padding: 5px 13px; border-radius: 20px; font-size: 11px; z-index: 999; white-space: nowrap; border: 1px solid #334155; pointer-events: none; }
+    .map-rerouting { position: absolute; top: 10px; right: 10px; background: rgba(9,15,26,0.92); color: #60a5fa; padding: 4px 11px; border-radius: 7px; font-size: 12px; z-index: 999; display: flex; align-items: center; gap: 5px; border: 1px solid #334155; }
 
-    /* ── Route actions / elevation ── */
-    .route-actions { padding: 12px 16px; border-top: 1px solid #334155; display: flex; gap: 8px; align-items: center; }
-    .save-input { flex: 1; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 7px 12px; border-radius: 7px; font-size: 13px; outline: none; }
+    /* ── Actions / elevation ── */
+    .route-actions { padding: 11px 14px; border-top: 1px solid #334155; display: flex; gap: 7px; align-items: center; }
+    .save-input { flex: 1; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 6px 11px; border-radius: 7px; font-size: 13px; outline: none; }
     .save-input:focus { border-color: #3b82f6; }
-    .elevation-container { padding: 14px 16px; border-top: 1px solid #334155; }
-    .elevation-title { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .elevation-container { padding: 13px 14px; border-top: 1px solid #334155; }
+    .elevation-title { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
 
     /* ── Saved cards ── */
-    .saved-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden; margin-bottom: 12px; transition: border-color 0.2s; }
+    .saved-card { background: #1e293b; border: 1px solid #334155; border-radius: 13px; overflow: hidden; margin-bottom: 10px; transition: border-color 0.2s; }
     .saved-card.expanded { border-color: #3b82f6; }
-    .saved-card-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .saved-card-header { padding: 11px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .saved-card-header:hover { background: rgba(255,255,255,0.02); }
     .saved-card-name { font-size: 14px; font-weight: 600; color: #f8fafc; }
     .saved-card-meta { font-size: 11px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-    .saved-card-btns { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+    .saved-card-btns { margin-left: auto; display: flex; gap: 5px; flex-shrink: 0; }
 
     /* ── Profile ── */
-    .profile-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-    .profile-avatar { width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6, #6366f1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+    .profile-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+    .profile-avatar { width: 56px; height: 56px; background: linear-gradient(135deg,#3b82f6,#6366f1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 14px; }
 
     /* ── Empty ── */
-    .empty-state { text-align: center; padding: 60px 20px; }
-    .empty-icon { font-size: 48px; margin-bottom: 16px; }
-    .empty-title { font-size: 18px; font-weight: 600; color: #64748b; margin-bottom: 8px; }
-    .empty-text { font-size: 14px; color: #475569; line-height: 1.6; }
+    .empty-state { text-align: center; padding: 50px 20px; }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; }
+    .empty-title { font-size: 17px; font-weight: 600; color: #64748b; margin-bottom: 7px; }
+    .empty-text { font-size: 13px; color: #475569; line-height: 1.6; }
+
+    /* ── Manual route rerouting notice ── */
+    .manual-status { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(99,102,241,0.1); border-bottom: 1px solid rgba(99,102,241,0.2); font-size: 12px; color: #a5b4fc; }
 
     @media (max-width: 768px) {
       #root { flex-direction: column; }
       .sidebar { width: 100%; min-width: unset; height: auto; position: relative; }
-      .route-stats { grid-template-columns: repeat(2, 1fr); }
+      .route-stats { grid-template-columns: repeat(2,1fr); }
     }
   </style>
 </head>
@@ -178,126 +206,99 @@
   const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
 
   const SURFACE_OPTIONS = [
-    { id: 'asphalt', label: 'Asphalt',  icon: '🛣️' },
-    { id: 'gravel',  label: 'Schotter', icon: '🪨' },
-    { id: 'pebble',  label: 'Kies',     icon: '⚪' },
-    { id: 'dirt',    label: 'Feldweg',  icon: '🌿' },
+    {id:'asphalt',label:'Asphalt', icon:'🛣️'},
+    {id:'gravel', label:'Schotter',icon:'🪨'},
+    {id:'pebble', label:'Kies',    icon:'⚪'},
+    {id:'dirt',   label:'Feldweg', icon:'🌿'},
   ];
   const ROUTE_TYPES = [
-    { id: 'flat',     label: 'Flach',   icon: '🏁', tagline: 'Ideal für Tempo & Ausdauer',    color: '#22c55e', pref: 'fastest',     seed: 1 },
-    { id: 'hilly',    label: 'Hügelig', icon: '⛰️', tagline: 'Abwechslungsreich & kraftvoll', color: '#f59e0b', pref: 'recommended', seed: 2 },
-    { id: 'mountain', label: 'Bergig',  icon: '🏔️', tagline: 'Herausfordernd & spektakulär',  color: '#ef4444', pref: 'shortest',    seed: 3 },
+    {id:'flat',    label:'Flach',   icon:'🏁',tagline:'Ideal für Tempo & Ausdauer',   color:'#22c55e',pref:'fastest',    seed:1},
+    {id:'hilly',   label:'Hügelig', icon:'⛰️',tagline:'Abwechslungsreich & kraftvoll',color:'#f59e0b',pref:'recommended',seed:2},
+    {id:'mountain',label:'Bergig',  icon:'🏔️',tagline:'Herausfordernd & spektakulär', color:'#ef4444',pref:'shortest',   seed:3},
+  ];
+  const PREFS = [
+    {id:'fastest',    label:'⚡ Schnell'},
+    {id:'recommended',label:'⭐ Ausgewogen'},
+    {id:'shortest',   label:'🏔️ Malerisch'},
   ];
 
   // ── Helpers ──────────────────────────────────────────────────────────────
-
-  function calcDifficulty(distKm, elevM) {
-    const s = distKm * 0.5 + elevM * 0.02;
-    if (s < 30)  return { label: 'Leicht',  cls: 'diff-easy'    };
-    if (s < 70)  return { label: 'Mittel',  cls: 'diff-medium'  };
-    if (s < 130) return { label: 'Schwer',  cls: 'diff-hard'    };
-    return               { label: 'Extrem', cls: 'diff-extreme' };
-  }
-  function formatDuration(distKm, speedKmh) {
-    const h = distKm / speedKmh, hrs = Math.floor(h), mins = Math.round((h - hrs) * 60);
-    return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-  }
-  function parseCoords(text) {
-    const m = text.trim().match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);
-    if (!m) return null;
-    const a = parseFloat(m[1]), b = parseFloat(m[2]);
-    if (a >= -90 && a <= 90 && b >= -180 && b <= 180) return [b, a];
-    return null;
-  }
-  function buildElevProfile(coords, distKm) {
-    const step = Math.max(1, Math.floor(coords.length / 80));
-    return coords.filter((_, i) => i % step === 0)
-      .map((c, i) => ({ d: parseFloat((i * step / coords.length * distKm).toFixed(2)), ele: c[2] || 0 }));
-  }
-  function generateGPX(name, coords) {
-    const pts = coords.map(([lon, lat, ele]) =>
-      `    <trkpt lat="${lat.toFixed(6)}" lon="${lon.toFixed(6)}">${ele != null ? `<ele>${ele.toFixed(1)}</ele>` : ''}</trkpt>`
-    ).join('\n');
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Rennrad Routenplaner" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata><name>${name}</name></metadata>\n  <trk><name>${name}</name><trkseg>\n${pts}\n  </trkseg></trk>\n</gpx>`;
-  }
-  function downloadGPX(name, coords) {
-    const blob = new Blob([generateGPX(name, coords)], { type: 'application/gpx+xml' });
-    const url = URL.createObjectURL(blob); const a = document.createElement('a');
-    a.href = url; a.download = `${name.replace(/\s+/g, '_')}.gpx`; a.click(); URL.revokeObjectURL(url);
-  }
-  function shortAddress(item) {
-    const a = item.address || {};
-    return [a.road || a.pedestrian || a.path || a.suburb, a.city || a.town || a.village || a.county, a.country]
-      .filter(Boolean).join(', ') || item.display_name;
-  }
+  function calcDifficulty(d,e){const s=d*0.5+e*0.02;if(s<30)return{label:'Leicht',cls:'diff-easy'};if(s<70)return{label:'Mittel',cls:'diff-medium'};if(s<130)return{label:'Schwer',cls:'diff-hard'};return{label:'Extrem',cls:'diff-extreme'};}
+  function formatDuration(d,spd){const h=d/spd,hrs=Math.floor(h),m=Math.round((h-hrs)*60);return hrs>0?`${hrs}h ${m}m`:`${m}m`;}
+  function parseCoords(t){const m=t.trim().match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);if(!m)return null;const a=parseFloat(m[1]),b=parseFloat(m[2]);if(a>=-90&&a<=90&&b>=-180&&b<=180)return[b,a];return null;}
+  function buildElevProfile(coords,distKm){const step=Math.max(1,Math.floor(coords.length/80));return coords.filter((_,i)=>i%step===0).map((c,i)=>({d:parseFloat((i*step/coords.length*distKm).toFixed(2)),ele:c[2]||0}));}
+  function gpx(name,coords){const pts=coords.map(([lon,lat,ele])=>`    <trkpt lat="${lat.toFixed(6)}" lon="${lon.toFixed(6)}">${ele!=null?`<ele>${ele.toFixed(1)}</ele>`:''}</trkpt>`).join('\n');return`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Rennrad Routenplaner" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata><name>${name}</name></metadata>\n  <trk><name>${name}</name><trkseg>\n${pts}\n  </trkseg></trk>\n</gpx>`;}
+  function downloadGPX(name,coords){const b=new Blob([gpx(name,coords)],{type:'application/gpx+xml'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`${name.replace(/\s+/g,'_')}.gpx`;a.click();URL.revokeObjectURL(u);}
+  function shortAddress(item){const a=item.address||{};return[a.road||a.pedestrian||a.path||a.suburb,a.city||a.town||a.village||a.county,a.country].filter(Boolean).join(', ')||item.display_name;}
 
   // ── API ───────────────────────────────────────────────────────────────────
-
-  async function orsPost(apiKey, body) {
-    const res = await fetch(`${ORS_BASE}/directions/cycling-road/geojson`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': apiKey },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || `API-Fehler ${res.status}`); }
-    return (await res.json()).features[0];
+  async function orsPost(apiKey,body){
+    const res=await fetch(`${ORS_BASE}/directions/cycling-road/geojson`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':apiKey},body:JSON.stringify(body)});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`API-Fehler ${res.status}`);}
+    return(await res.json()).features[0];
   }
-  async function fetchRoundTrip(apiKey, startCoord, distKm, pref, seed) {
-    return orsPost(apiKey, { coordinates: [startCoord], options: { round_trip: { length: distKm * 1000, points: 3, seed } }, elevation: true, instructions: false, preference: pref });
-  }
-  async function fetchViaRoute(apiKey, waypoints, pref) {
-    return orsPost(apiKey, { coordinates: waypoints, elevation: true, instructions: false, preference: pref });
-  }
-  function parseFeature(feature, typeId) {
-    const coords = feature.geometry.coordinates, s = feature.properties.summary;
-    const distKm = parseFloat((s.distance / 1000).toFixed(1));
-    return { type: typeId, coords, distKm, elevUp: Math.round(s.ascent || 0), elevDown: Math.round(s.descent || 0), elevProfile: buildElevProfile(coords, distKm) };
-  }
-  async function reverseGeocode(lon, lat) {
-    try {
-      const res = await fetch(`${NOMINATIM_BASE}/reverse?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&format=json&zoom=16`, { headers: { 'Accept-Language': 'de' } });
-      const data = await res.json();
-      if (data.error) return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-      const a = data.address || {};
-      return [a.road || a.pedestrian || a.path || a.suburb, a.city || a.town || a.village || a.county].filter(Boolean).join(', ') || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-    } catch { return `${lat.toFixed(4)}, ${lon.toFixed(4)}`; }
+  async function fetchRoundTrip(ak,sc,dk,pref,seed){return orsPost(ak,{coordinates:[sc],options:{round_trip:{length:dk*1000,points:3,seed}},elevation:true,instructions:false,preference:pref});}
+  async function fetchViaRoute(ak,wps,pref){return orsPost(ak,{coordinates:wps,elevation:true,instructions:false,preference:pref});}
+  function parseFeature(feat,typeId){const c=feat.geometry.coordinates,s=feat.properties.summary,dk=parseFloat((s.distance/1000).toFixed(1));return{type:typeId,coords:c,distKm:dk,elevUp:Math.round(s.ascent||0),elevDown:Math.round(s.descent||0),elevProfile:buildElevProfile(c,dk)};}
+  async function reverseGeocode(lon,lat){
+    try{const r=await fetch(`${NOMINATIM_BASE}/reverse?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&format=json&zoom=16`,{headers:{'Accept-Language':'de'}});const d=await r.json();if(d.error)return`${lat.toFixed(4)}, ${lon.toFixed(4)}`;const a=d.address||{};return[a.road||a.pedestrian||a.path||a.suburb,a.city||a.town||a.village||a.county].filter(Boolean).join(', ')||`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}
+    catch{return`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}
   }
 
-  // ── LocationInput (sidebar start search) ─────────────────────────────────
+  // ── Shared location search component ─────────────────────────────────────
+  // mode='confirm': holds confirmed state (for sidebar start point)
+  // mode='oneshot': clears after selection (for adding waypoints)
+  function GeoSearch({mode='confirm', placeholder='Ort oder Koordinaten…', onSelect, onClear}) {
+    const [text,setText]=useState('');
+    const [sugg,setSugg]=useState([]);
+    const [busy,setBusy]=useState(false);
+    const [conf,setConf]=useState(null);
+    const tmr=useRef(null), wrap=useRef(null);
 
-  function LocationInput({ onConfirm }) {
-    const [text, setText] = useState(''), [suggestions, setSuggestions] = useState([]);
-    const [searching, setSearching] = useState(false), [confirmed, setConfirmed] = useState(null);
-    const timerRef = useRef(null), wrapRef = useRef(null);
-    useEffect(() => {
-      const h = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setSuggestions([]); };
-      document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
-    }, []);
-    const confirm = (label, coord) => { setText(label); setConfirmed({ label, coord }); setSuggestions([]); onConfirm(coord, label); };
-    const clear = () => { setText(''); setConfirmed(null); setSuggestions([]); onConfirm(null, ''); };
-    const handleChange = e => {
-      const val = e.target.value; setText(val); setConfirmed(null); onConfirm(null, ''); setSuggestions([]);
-      clearTimeout(timerRef.current);
-      if (!val.trim()) return;
-      const coord = parseCoords(val);
-      if (coord) { confirm(`📍 ${parseFloat(coord[1].toFixed(5))}, ${parseFloat(coord[0].toFixed(5))}`, coord); return; }
-      if (val.trim().length < 3) return;
-      setSearching(true);
-      timerRef.current = setTimeout(async () => {
-        try { const res = await fetch(`${NOMINATIM_BASE}/search?q=${encodeURIComponent(val)}&format=json&limit=5&addressdetails=1`, { headers: { 'Accept-Language': 'de' } }); setSuggestions(await res.json()); } catch {}
-        setSearching(false);
-      }, 450);
+    useEffect(()=>{
+      const h=e=>{if(wrap.current&&!wrap.current.contains(e.target))setSugg([]);};
+      document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);
+    },[]);
+
+    const pick=(label,coord)=>{
+      if(mode==='confirm'){setText(label);setConf({label,coord});setSugg([]);}
+      else{setText('');setSugg([]);}
+      onSelect(coord,label);
     };
-    return (
-      <div className="loc-wrap" ref={wrapRef}>
-        <input type="text" value={text} onChange={handleChange} placeholder="Ort, Adresse oder Koordinaten" style={confirmed ? { borderColor: '#22c55e' } : {}} autoComplete="off" />
-        <div className="loc-hint">z. B. „Hamburg, Rathausmarkt" oder „53.55, 10.00"</div>
-        {confirmed && <div className="loc-confirmed"><span style={{ color: '#4ade80' }}>✓</span><span className="loc-confirmed-text">{confirmed.label}</span><button className="loc-clear" onClick={clear}>✕</button></div>}
-        {(suggestions.length > 0 || searching) && !confirmed && (
+    const clear=()=>{setText('');setConf(null);setSugg([]);if(onClear)onClear();};
+
+    const onChange=e=>{
+      const v=e.target.value;setText(v);
+      if(mode==='confirm'){setConf(null);if(onClear)onClear();}
+      setSugg([]);clearTimeout(tmr.current);
+      if(!v.trim())return;
+      const coord=parseCoords(v);
+      if(coord){pick(`📍 ${parseFloat(coord[1].toFixed(5))}, ${parseFloat(coord[0].toFixed(5))}`,coord);return;}
+      if(v.trim().length<3)return;
+      setBusy(true);
+      tmr.current=setTimeout(async()=>{
+        try{const r=await fetch(`${NOMINATIM_BASE}/search?q=${encodeURIComponent(v)}&format=json&limit=5&addressdetails=1`,{headers:{'Accept-Language':'de'}});setSugg(await r.json());}catch{}
+        setBusy(false);
+      },450);
+    };
+
+    return(
+      <div className="loc-wrap" ref={wrap}>
+        <input type="text" value={text} onChange={onChange} placeholder={placeholder}
+          style={conf?{borderColor:'#22c55e'}:{}} autoComplete="off"/>
+        {mode==='confirm'&&<div className="loc-hint">z. B. „Hamburg, Rathausmarkt" oder „53.55, 10.00"</div>}
+        {conf&&mode==='confirm'&&(
+          <div className="loc-confirmed">
+            <span style={{color:'#4ade80'}}>✓</span>
+            <span className="loc-confirmed-text">{conf.label}</span>
+            <button className="loc-clear" onClick={clear}>✕</button>
+          </div>
+        )}
+        {(sugg.length>0||busy)&&!conf&&(
           <div className="loc-dropdown">
-            {searching && <div style={{ padding: '10px 12px', fontSize: 12, color: '#64748b' }}>Suche…</div>}
-            {suggestions.map((s, i) => (
-              <div key={i} className="loc-item" onClick={() => confirm(shortAddress(s), [parseFloat(s.lon), parseFloat(s.lat)])}>
+            {busy&&<div style={{padding:'8px 11px',fontSize:11,color:'#64748b'}}>Suche…</div>}
+            {sugg.map((s,i)=>(
+              <div key={i} className="loc-item" onClick={()=>pick(shortAddress(s),[parseFloat(s.lon),parseFloat(s.lat)])}>
                 <div className="loc-item-name">{shortAddress(s)}</div>
                 <div className="loc-item-detail">{s.display_name}</div>
               </div>
@@ -308,354 +309,226 @@
     );
   }
 
-  // ── ViaSearch (one-shot search inside waypoint panel) ─────────────────────
-
-  function ViaSearch({ onAdd }) {
-    const [text, setText] = useState(''), [suggestions, setSuggestions] = useState([]), [searching, setSearching] = useState(false);
-    const timerRef = useRef(null), wrapRef = useRef(null);
-    useEffect(() => {
-      const h = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setSuggestions([]); };
-      document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
-    }, []);
-    const select = (name, coord) => { onAdd(coord, name); setText(''); setSuggestions([]); };
-    const handleChange = e => {
-      const val = e.target.value; setText(val); setSuggestions([]);
-      clearTimeout(timerRef.current);
-      if (!val.trim()) return;
-      const coord = parseCoords(val);
-      if (coord) { select(`${parseFloat(coord[1].toFixed(5))}, ${parseFloat(coord[0].toFixed(5))}`, coord); return; }
-      if (val.trim().length < 3) return;
-      setSearching(true);
-      timerRef.current = setTimeout(async () => {
-        try { const res = await fetch(`${NOMINATIM_BASE}/search?q=${encodeURIComponent(val)}&format=json&limit=4&addressdetails=1`, { headers: { 'Accept-Language': 'de' } }); setSuggestions(await res.json()); } catch {}
-        setSearching(false);
-      }, 450);
-    };
-    return (
-      <div ref={wrapRef} style={{ position: 'relative' }}>
-        <input
-          type="text" value={text} onChange={handleChange}
-          placeholder="➕  Ort suchen oder Koordinaten eingeben…"
-          autoComplete="off"
-          style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', color: '#f8fafc', padding: '7px 10px', borderRadius: 7, fontSize: 12, outline: 'none' }}
-          onFocus={e => e.target.style.borderColor = '#3b82f6'}
-          onBlur={e => e.target.style.borderColor = '#334155'}
-        />
-        {(suggestions.length > 0 || searching) && (
-          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: '#1e293b', border: '1px solid #334155', borderRadius: 8, zIndex: 9999, maxHeight: 200, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-            {searching && <div style={{ padding: '8px 12px', fontSize: 11, color: '#64748b' }}>Suche…</div>}
-            {suggestions.map((s, i) => (
-              <div key={i} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #334155', transition: 'background 0.1s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#334155'}
-                onMouseLeave={e => e.currentTarget.style.background = ''}
-                onClick={() => select(shortAddress(s), [parseFloat(s.lon), parseFloat(s.lat)])}
-              >
-                <div style={{ fontSize: 12, fontWeight: 500, color: '#e2e8f0' }}>{shortAddress(s)}</div>
-                <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{s.display_name}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ── WaypointPanel ─────────────────────────────────────────────────────────
-
-  function WaypointPanel({ viaPoints, startName, onAdd, onRemove, onReorder }) {
-    const [collapsed, setCollapsed] = useState(false);
-    return (
-      <div className="wp-panel">
-        <div className="wp-header" onClick={() => setCollapsed(c => !c)}>
-          <span className="wp-header-label">
-            📍 Wegpunkte{viaPoints.length > 0 ? ` (${viaPoints.length})` : ''}
-          </span>
-          <span className="wp-header-toggle">{collapsed ? '▼ einblenden' : '▲ ausblenden'}</span>
-        </div>
-
-        {!collapsed && (
-          <div className="wp-body">
-            {/* Start */}
-            <div className="wp-row fixed">
-              <span className="wp-badge start">🟢</span>
-              <span className="wp-name fixed">{startName || 'Start'}</span>
-            </div>
-
-            {/* Via points */}
-            {viaPoints.map((vp, i) => (
-              <div key={i} className="wp-row">
-                <span className="wp-badge via">{i + 1}</span>
-                <span className="wp-name" title={vp.name}>{vp.name}</span>
-                <div className="wp-actions">
-                  <button className="wp-btn" onClick={() => onReorder(i, i - 1)} disabled={i === 0} title="Nach oben">↑</button>
-                  <button className="wp-btn" onClick={() => onReorder(i, i + 1)} disabled={i === viaPoints.length - 1} title="Nach unten">↓</button>
-                  <button className="wp-btn del" onClick={() => onRemove(i)} title="Entfernen">✕</button>
-                </div>
-              </div>
-            ))}
-
-            {/* End = Start */}
-            <div className="wp-row fixed">
-              <span className="wp-badge end">🔴</span>
-              <span className="wp-name fixed">{startName || 'Start'} (Ziel)</span>
-            </div>
-
-            {/* Search input */}
-            <div className="wp-search">
-              <ViaSearch onAdd={onAdd} />
-              <div style={{ fontSize: 10, color: '#334155', marginTop: 4 }}>Oder direkt auf die Karte klicken, um einen Wegpunkt zu setzen.</div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ── ElevationChart (pure SVG) ─────────────────────────────────────────────
-
-  function ElevationChart({ data, color }) {
-    if (!data || data.length < 2) return null;
-    const W = 560, H = 100, pad = { top: 6, right: 6, bottom: 20, left: 36 };
-    const cW = W - pad.left - pad.right, cH = H - pad.top - pad.bottom;
-    const eles = data.map(d => d.ele), minE = Math.min(...eles), maxE = Math.max(...eles), rangeE = maxE - minE || 1;
-    const maxD = data[data.length - 1].d || 1;
-    const x = d => pad.left + (d / maxD) * cW;
-    const y = e => pad.top  + (1 - (e - minE) / rangeE) * cH;
-    const pts  = data.map(d => `${x(d.d).toFixed(1)},${y(d.ele).toFixed(1)}`).join(' ');
-    const area = `${x(0).toFixed(1)},${(pad.top+cH).toFixed(1)} ${pts} ${x(maxD).toFixed(1)},${(pad.top+cH).toFixed(1)}`;
-    const gid  = `eg${color.replace('#','')}`;
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }}>
-        <defs>
-          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor={color} stopOpacity="0.45" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.04" />
-          </linearGradient>
-        </defs>
-        <polygon points={area} fill={`url(#${gid})`} />
-        <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
-        {[minE, minE + rangeE * 0.5, maxE].map(v => <text key={v} x={pad.left-3} y={y(v)+3.5} textAnchor="end" fontSize="9" fill="#64748b">{Math.round(v)}m</text>)}
-        {[0, maxD*0.5, maxD].map((v,i) => <text key={i} x={x(v)} y={H-3} textAnchor="middle" fontSize="9" fill="#64748b">{v.toFixed(1)}km</text>)}
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top+cH} stroke="#1e293b" strokeWidth="1" />
-        <line x1={pad.left} y1={pad.top+cH} x2={pad.left+cW} y2={pad.top+cH} stroke="#1e293b" strokeWidth="1" />
+  // ── ElevationChart ────────────────────────────────────────────────────────
+  function ElevationChart({data,color}){
+    if(!data||data.length<2)return null;
+    const W=560,H=100,pad={top:6,right:6,bottom:20,left:36};
+    const cW=W-pad.left-pad.right,cH=H-pad.top-pad.bottom;
+    const eles=data.map(d=>d.ele),minE=Math.min(...eles),maxE=Math.max(...eles),rng=maxE-minE||1;
+    const maxD=data[data.length-1].d||1;
+    const x=d=>pad.left+(d/maxD)*cW, y=e=>pad.top+(1-(e-minE)/rng)*cH;
+    const pts=data.map(d=>`${x(d.d).toFixed(1)},${y(d.ele).toFixed(1)}`).join(' ');
+    const area=`${x(0).toFixed(1)},${(pad.top+cH).toFixed(1)} ${pts} ${x(maxD).toFixed(1)},${(pad.top+cH).toFixed(1)}`;
+    const gid=`eg${color.replace('#','')}`;
+    return(
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H,display:'block'}}>
+        <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.45"/><stop offset="100%" stopColor={color} stopOpacity="0.04"/></linearGradient></defs>
+        <polygon points={area} fill={`url(#${gid})`}/>
+        <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round"/>
+        {[minE,minE+rng*0.5,maxE].map(v=><text key={v} x={pad.left-3} y={y(v)+3.5} textAnchor="end" fontSize="9" fill="#64748b">{Math.round(v)}m</text>)}
+        {[0,maxD*0.5,maxD].map((v,i)=><text key={i} x={x(v)} y={H-3} textAnchor="middle" fontSize="9" fill="#64748b">{v.toFixed(1)}km</text>)}
+        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top+cH} stroke="#1e293b" strokeWidth="1"/>
+        <line x1={pad.left} y1={pad.top+cH} x2={pad.left+cW} y2={pad.top+cH} stroke="#1e293b" strokeWidth="1"/>
       </svg>
     );
   }
 
   // ── RouteMap (Leaflet) ────────────────────────────────────────────────────
+  // markerMode: 'roundtrip' = green start + via numbers
+  //             'manual'    = all waypoints numbered 1..N
+  function RouteMap({coords, color, mapId, editMode=false, viaCoords=[], allMarkers=null, onAddVia, onMoveVia, rerouting=false}) {
+    const mapRef=useRef(null), polyRef=useRef(null), startMkRef=useRef(null);
+    const viaMkRef=useRef([]), allMkRef=useRef([]);
+    const editRef=useRef(editMode), addRef=useRef(onAddVia);
+    useEffect(()=>{editRef.current=editMode;},[editMode]);
+    useEffect(()=>{addRef.current=onAddVia;},[onAddVia]);
 
-  function RouteMap({ coords, color, mapId, editMode, viaCoords, onAddVia, onMoveVia, rerouting }) {
-    const mapRef        = useRef(null);
-    const polyRef       = useRef(null);
-    const startMkRef    = useRef(null);
-    const viaMkRef      = useRef([]);
-    const editRef       = useRef(editMode);
-    const addRef        = useRef(onAddVia);
-    useEffect(() => { editRef.current = editMode; }, [editMode]);
-    useEffect(() => { addRef.current  = onAddVia;  }, [onAddVia]);
-
-    // Init map once
-    useEffect(() => {
-      const container = document.getElementById(mapId);
-      if (!container) return;
-      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
-      const map = L.map(container, { zoomControl: true, attributionControl: false });
-      mapRef.current = map;
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-      map.on('click', e => { if (editRef.current) addRef.current([e.latlng.lng, e.latlng.lat]); });
-      return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
-    }, [mapId]);
+    // Init map
+    useEffect(()=>{
+      const el=document.getElementById(mapId);if(!el)return;
+      if(mapRef.current){mapRef.current.remove();mapRef.current=null;}
+      const map=L.map(el,{zoomControl:true,attributionControl:false});mapRef.current=map;
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
+      map.on('click',e=>{if(editRef.current&&addRef.current)addRef.current([e.latlng.lng,e.latlng.lat]);});
+      return()=>{if(mapRef.current){mapRef.current.remove();mapRef.current=null;}};
+    },[mapId]);
 
     // Update polyline
-    useEffect(() => {
-      if (!mapRef.current || !coords || !coords.length) return;
-      if (polyRef.current)    { polyRef.current.remove();    polyRef.current = null; }
-      if (startMkRef.current) { startMkRef.current.remove(); startMkRef.current = null; }
-      const ll = coords.map(c => [c[1], c[0]]);
-      polyRef.current    = L.polyline(ll, { color, weight: 4, opacity: 0.9 }).addTo(mapRef.current);
-      startMkRef.current = L.marker(ll[0], { icon: L.divIcon({ html: '🟢', className: '', iconSize: [20,20] }) }).addTo(mapRef.current);
-      mapRef.current.fitBounds(polyRef.current.getBounds(), { padding: [24,24] });
-    }, [coords, color]);
+    useEffect(()=>{
+      if(!mapRef.current||!coords||!coords.length)return;
+      if(polyRef.current){polyRef.current.remove();polyRef.current=null;}
+      if(startMkRef.current){startMkRef.current.remove();startMkRef.current=null;}
+      const ll=coords.map(c=>[c[1],c[0]]);
+      polyRef.current=L.polyline(ll,{color,weight:4,opacity:0.9}).addTo(mapRef.current);
+      startMkRef.current=L.marker(ll[0],{icon:L.divIcon({html:'🟢',className:'',iconSize:[20,20]})}).addTo(mapRef.current);
+      mapRef.current.fitBounds(polyRef.current.getBounds(),{padding:[24,24]});
+    },[coords,color]);
 
-    // Edit mode cursor + zoom
-    useEffect(() => {
-      if (!mapRef.current) return;
-      mapRef.current.getContainer().style.cursor = editMode ? 'crosshair' : '';
-      if (editMode) mapRef.current.doubleClickZoom.disable();
-      else          mapRef.current.doubleClickZoom.enable();
-    }, [editMode]);
+    // Cursor + dblclick zoom
+    useEffect(()=>{
+      if(!mapRef.current)return;
+      mapRef.current.getContainer().style.cursor=editMode?'crosshair':'';
+      if(editMode)mapRef.current.doubleClickZoom.disable();
+      else mapRef.current.doubleClickZoom.enable();
+    },[editMode]);
 
-    // Via markers — draggable, numbered, no dblclick-delete (handled in list)
-    useEffect(() => {
-      if (!mapRef.current) return;
-      viaMkRef.current.forEach(m => m.remove());
-      viaMkRef.current = [];
-      if (!editMode || !viaCoords.length) return;
-      viaCoords.forEach((vp, i) => {
-        const icon = L.divIcon({
-          html: `<div style="background:#f59e0b;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);cursor:grab">${i+1}</div>`,
-          className: '', iconSize: [26,26], iconAnchor: [13,13],
-        });
-        const mk = L.marker([vp[1], vp[0]], { draggable: true, icon }).addTo(mapRef.current);
-        mk.on('dragend', e => {
-          const { lat, lng } = e.target.getLatLng();
-          onMoveVia(i, [lng, lat]);
-        });
+    // Via markers (round-trip edit mode) — numbered, draggable
+    useEffect(()=>{
+      if(!mapRef.current)return;
+      viaMkRef.current.forEach(m=>m.remove());viaMkRef.current=[];
+      if(!editMode||!viaCoords.length)return;
+      viaCoords.forEach((vp,i)=>{
+        const icon=L.divIcon({html:`<div style="background:#f59e0b;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);cursor:grab">${i+1}</div>`,className:'',iconSize:[26,26],iconAnchor:[13,13]});
+        const mk=L.marker([vp[1],vp[0]],{draggable:true,icon}).addTo(mapRef.current);
+        mk.on('dragend',e=>{const{lat,lng}=e.target.getLatLng();if(onMoveVia)onMoveVia(i,[lng,lat]);});
         viaMkRef.current.push(mk);
       });
-    }, [viaCoords, editMode, onMoveVia]);
+    },[viaCoords,editMode,onMoveVia]);
 
-    return (
+    // All-markers mode (manual route) — numbered, not draggable
+    useEffect(()=>{
+      if(!mapRef.current)return;
+      allMkRef.current.forEach(m=>m.remove());allMkRef.current=[];
+      if(!allMarkers||!allMarkers.length)return;
+      allMarkers.forEach((wp,i)=>{
+        const isFirst=i===0,isLast=i===allMarkers.length-1;
+        const bg=isFirst?'#22c55e':isLast?'#ef4444':'#6366f1';
+        const html=isFirst?'<div style="font-size:16px">🟢</div>':isLast?'<div style="font-size:16px">🔴</div>':`<div style="background:${bg};color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4)">${i+1}</div>`;
+        const mk=L.marker([wp.coord[1],wp.coord[0]],{icon:L.divIcon({html,className:'',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(mapRef.current);
+        mk.bindTooltip(wp.name,{direction:'top',offset:[0,-12],className:''}); // native tooltip
+        allMkRef.current.push(mk);
+      });
+    },[allMarkers]);
+
+    return(
       <div className="map-wrap">
-        <div id={mapId} className={`route-map${editMode ? ' edit' : ''}`} />
-        {editMode && <div className="map-hint">📍 Klick = Wegpunkt hinzufügen &nbsp;·&nbsp; Marker ziehen = verschieben</div>}
-        {rerouting && <div className="map-rerouting"><span className="spin-sm" /> Neu berechnen…</div>}
+        <div id={mapId} className={`route-map${editMode?' edit':''}`}/>
+        {editMode&&<div className="map-hint">📍 Klick = Wegpunkt &nbsp;·&nbsp; Marker ziehen = verschieben</div>}
+        {rerouting&&<div className="map-rerouting"><span className="spin-sm"/> Neu berechnen…</div>}
       </div>
     );
   }
 
-  // ── RouteCard ─────────────────────────────────────────────────────────────
+  // ── Waypoint panel inside route card (BELOW map) ──────────────────────────
+  function WaypointPanel({viaPoints,startName,onAdd,onRemove,onReorder}){
+    const [collapsed,setCollapsed]=useState(false);
+    return(
+      <div className="wpp">
+        <div className="wpp-header" onClick={()=>setCollapsed(c=>!c)}>
+          <span className="wpp-header-label">📍 Wegpunkte {viaPoints.length>0?`(${viaPoints.length})`:''}</span>
+          <span style={{fontSize:11,color:'#475569'}}>{collapsed?'▼ einblenden':'▲ ausblenden'}</span>
+        </div>
+        {!collapsed&&(
+          <div>
+            <div className="wpp-row fixed"><span className="wpp-badge se">🟢</span><span className="wpp-name fixed">{startName||'Start'}</span></div>
+            {viaPoints.map((vp,i)=>(
+              <div key={i} className="wpp-row">
+                <span className="wpp-badge via">{i+1}</span>
+                <span className="wpp-name" title={vp.name}>{vp.name}</span>
+                <div className="wpp-actions">
+                  <button className="wpp-btn" onClick={()=>onReorder(i,i-1)} disabled={i===0}>↑</button>
+                  <button className="wpp-btn" onClick={()=>onReorder(i,i+1)} disabled={i===viaPoints.length-1}>↓</button>
+                  <button className="wpp-btn del" onClick={()=>onRemove(i)}>✕</button>
+                </div>
+              </div>
+            ))}
+            <div className="wpp-row fixed"><span className="wpp-badge se">🔴</span><span className="wpp-name fixed">{startName||'Start'} (Ziel)</span></div>
+            <div className="wpp-search">
+              <GeoSearch mode="oneshot" placeholder="➕ Ort suchen oder Koordinaten…" onSelect={(coord,name)=>onAdd(coord,name)}/>
+              <div style={{fontSize:10,color:'#334155',marginTop:3}}>Oder auf die Karte klicken.</div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
-  function RouteCard({ initialRoute, typeInfo, speedKmh, onSave, index, apiKey, startLabel }) {
-    const [expanded,   setExpanded]   = useState(false);
-    const [editMode,   setEditMode]   = useState(false);
-    const [viaPoints,  setViaPoints]  = useState([]); // [{coord:[lon,lat], name:string}]
-    const [route,      setRoute]      = useState(initialRoute);
-    const [rerouting,  setRerouting]  = useState(false);
-    const [rerouteErr, setRerouteErr] = useState('');
-    const [saveName,   setSaveName]   = useState('');
-    const [startName,  setStartName]  = useState(startLabel || '');
-    const viaRef = useRef([]);
+  // ── RouteCard (round-trip, WaypointPanel now BELOW map) ───────────────────
+  function RouteCard({initialRoute,typeInfo,speedKmh,onSave,index,apiKey,startLabel}){
+    const [expanded,setExpanded]=useState(false);
+    const [editMode,setEditMode]=useState(false);
+    const [viaPoints,setViaPoints]=useState([]);
+    const [route,setRoute]=useState(initialRoute);
+    const [rerouting,setRerouting]=useState(false);
+    const [rerouteErr,setRerouteErr]=useState('');
+    const [saveName,setSaveName]=useState('');
+    const [startName,setStartName]=useState(startLabel||'');
+    const viaRef=useRef([]),reqId=useRef(0);
+    const diff=calcDifficulty(route.distKm,route.elevUp);
+    const dur=formatDuration(route.distKm,speedKmh);
+    const sc=initialRoute.coords[0].slice(0,2);
 
-    const diff     = calcDifficulty(route.distKm, route.elevUp);
-    const duration = formatDuration(route.distKm, speedKmh);
-    const startCoord = initialRoute.coords[0].slice(0, 2);
+    useEffect(()=>{if(editMode&&!startName)reverseGeocode(sc[0],sc[1]).then(setStartName);},[editMode]);
 
-    // Resolve start name once when entering edit mode
-    useEffect(() => {
-      if (editMode && !startName) {
-        reverseGeocode(startCoord[0], startCoord[1]).then(setStartName);
-      }
-    }, [editMode]);
+    const rerouteWith=useCallback(async(coords)=>{
+      const id=++reqId.current;setRerouting(true);setRerouteErr('');
+      try{
+        const feat=coords.length===0
+          ?await fetchRoundTrip(apiKey,sc,initialRoute.distKm,typeInfo.pref,typeInfo.seed)
+          :await fetchViaRoute(apiKey,[sc,...coords,sc],typeInfo.pref);
+        if(id!==reqId.current)return;
+        setRoute(parseFeature(feat,initialRoute.type));
+      }catch(e){if(id===reqId.current)setRerouteErr(e.message);}
+      finally{if(id===reqId.current)setRerouting(false);}
+    },[apiKey,sc,initialRoute,typeInfo]);
 
-    const rerouteWith = useCallback(async (coords) => {
-      setRerouting(true); setRerouteErr('');
-      try {
-        const feature = coords.length === 0
-          ? await fetchRoundTrip(apiKey, startCoord, initialRoute.distKm, typeInfo.pref, typeInfo.seed)
-          : await fetchViaRoute(apiKey, [startCoord, ...coords, startCoord], typeInfo.pref);
-        setRoute(parseFeature(feature, initialRoute.type));
-      } catch (e) { setRerouteErr(e.message); }
-      finally { setRerouting(false); }
-    }, [apiKey, startCoord, initialRoute, typeInfo]);
-
-    const updateVia = useCallback((newVia) => {
-      viaRef.current = newVia; setViaPoints(newVia);
-      rerouteWith(newVia.map(v => v.coord));
-    }, [rerouteWith]);
-
-    const handleAddVia = useCallback(async (coord, nameOverride) => {
-      const name = nameOverride || await reverseGeocode(coord[0], coord[1]);
-      updateVia([...viaRef.current, { coord, name }]);
-    }, [updateVia]);
-
-    const handleMoveVia = useCallback((i, coord) => {
-      const nv = [...viaRef.current]; nv[i] = { ...nv[i], coord };
-      // Update name async but don't await (keep existing name until resolved)
-      reverseGeocode(coord[0], coord[1]).then(name => {
-        const latest = [...viaRef.current]; if (latest[i]) { latest[i] = { ...latest[i], name }; viaRef.current = latest; setViaPoints([...latest]); }
-      });
+    const updateVia=useCallback(nv=>{viaRef.current=nv;setViaPoints(nv);rerouteWith(nv.map(v=>v.coord));},[rerouteWith]);
+    const handleAddVia=useCallback(async(coord,nameOvr)=>{
+      const name=nameOvr||await reverseGeocode(coord[0],coord[1]);
+      updateVia([...viaRef.current,{coord,name}]);
+    },[updateVia]);
+    const handleMoveVia=useCallback((i,coord)=>{
+      const nv=[...viaRef.current];nv[i]={...nv[i],coord};
+      reverseGeocode(coord[0],coord[1]).then(name=>{const l=[...viaRef.current];if(l[i]){l[i]={...l[i],name};viaRef.current=l;setViaPoints([...l]);}});
       updateVia(nv);
-    }, [updateVia]);
+    },[updateVia]);
+    const handleRemoveVia=useCallback(i=>updateVia(viaRef.current.filter((_,j)=>j!==i)),[updateVia]);
+    const handleReorder=useCallback((from,to)=>{if(to<0||to>=viaRef.current.length)return;const nv=[...viaRef.current];[nv[from],nv[to]]=[nv[to],nv[from]];updateVia(nv);},[updateVia]);
+    const resetEdit=()=>{viaRef.current=[];setViaPoints([]);setRoute(initialRoute);setEditMode(false);setRerouteErr('');};
 
-    const handleRemoveVia = useCallback(i => updateVia(viaRef.current.filter((_, j) => j !== i)), [updateVia]);
-
-    const handleReorder = useCallback((from, to) => {
-      if (to < 0 || to >= viaRef.current.length) return;
-      const nv = [...viaRef.current]; [nv[from], nv[to]] = [nv[to], nv[from]]; updateVia(nv);
-    }, [updateVia]);
-
-    const resetEdit = () => { viaRef.current = []; setViaPoints([]); setRoute(initialRoute); setEditMode(false); setRerouteErr(''); };
-
-    const viaCoords = viaPoints.map(v => v.coord);
-
-    return (
-      <div className={`route-card ${expanded ? 'selected' : ''}`}>
-        {/* Header */}
-        <div className="route-card-header" onClick={() => !editMode && setExpanded(e => !e)}>
+    return(
+      <div className={`route-card ${expanded?'selected':''}`}>
+        <div className="route-card-header" onClick={()=>!editMode&&setExpanded(e=>!e)}>
           <div className="route-type-badge">
             <div className={`route-icon ${route.type}`}>{typeInfo.icon}</div>
             <div><div className="route-name">{typeInfo.label}</div><div className="route-tagline">{typeInfo.tagline}</div></div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{display:'flex',alignItems:'center',gap:7}}>
             <span className={`difficulty-badge ${diff.cls}`}>{diff.label}</span>
-            <span style={{ color:'#64748b', fontSize:16 }}>{expanded ? '▲' : '▼'}</span>
+            <span style={{color:'#64748b',fontSize:15}}>{expanded?'▲':'▼'}</span>
           </div>
         </div>
-
-        {/* Stats */}
         <div className="route-stats">
-          {[
-            { icon:'📏', value: route.distKm,  label:'km'         },
-            { icon:'⬆️', value: route.elevUp,   label:'m Aufstieg' },
-            { icon:'⬇️', value: route.elevDown, label:'m Abstieg'  },
-            { icon:'⏱️', value: duration,        label:'Dauer', sm: true },
-          ].map(({icon,value,label,sm}) => (
-            <div key={label} className="stat-item">
-              <div style={{ fontSize:14, marginBottom:2 }}>{icon}</div>
-              <div className="stat-value" style={sm ? {fontSize:15} : {}}>{value}</div>
-              <div className="stat-label">{label}</div>
-            </div>
+          {[{icon:'📏',v:route.distKm,l:'km'},{icon:'⬆️',v:route.elevUp,l:'m Aufstieg'},{icon:'⬇️',v:route.elevDown,l:'m Abstieg'},{icon:'⏱️',v:dur,l:'Dauer',sm:true}].map(({icon,v,l,sm})=>(
+            <div key={l} className="stat-item"><div style={{fontSize:13,marginBottom:2}}>{icon}</div><div className="stat-value" style={sm?{fontSize:14}:{}}>{v}</div><div className="stat-label">{l}</div></div>
           ))}
         </div>
-
-        {expanded && (
+        {expanded&&(
           <>
-            {/* Edit toolbar */}
             <div className="edit-toolbar">
-              {!editMode ? (
-                <button className="btn-sm" onClick={() => setEditMode(true)}>✏️ Route manuell anpassen</button>
-              ) : (
-                <>
-                  <div className="edit-toolbar-label">
-                    {rerouting ? <><span className="spin-sm" /> Neu berechnen…</> : `${viaPoints.length} Wegpunkt${viaPoints.length !== 1 ? 'e' : ''}`}
-                  </div>
-                  <button className="btn-sm" onClick={resetEdit}>↩️ Zurücksetzen</button>
-                  <button className="btn-sm hi" onClick={() => setEditMode(false)}>✅ Fertig</button>
-                </>
-              )}
+              {!editMode
+                ?<button className="btn-sm" onClick={()=>setEditMode(true)}>✏️ Route manuell anpassen</button>
+                :<><div className="edit-toolbar-label">{rerouting?<><span className="spin-sm"/> Neu berechnen…</>:`${viaPoints.length} Wegpunkt${viaPoints.length!==1?'e':''}`}</div><button className="btn-sm" onClick={resetEdit}>↩️ Zurücksetzen</button><button className="btn-sm hi" onClick={()=>setEditMode(false)}>✅ Fertig</button></>
+              }
             </div>
-            {rerouteErr && <div style={{ padding:'6px 16px', color:'#f87171', fontSize:12 }}>⚠️ {rerouteErr}</div>}
+            {rerouteErr&&<div style={{padding:'5px 14px',color:'#f87171',fontSize:12}}>⚠️ {rerouteErr}</div>}
 
-            {/* Waypoint list (only in edit mode) */}
-            {editMode && (
-              <WaypointPanel
-                viaPoints={viaPoints}
-                startName={startName}
-                onAdd={handleAddVia}
-                onRemove={handleRemoveVia}
-                onReorder={handleReorder}
-              />
+            {/* MAP first */}
+            <RouteMap coords={route.coords} color={typeInfo.color} mapId={`map-${index}`}
+              editMode={editMode} viaCoords={viaPoints.map(v=>v.coord)} rerouting={rerouting}
+              onAddVia={handleAddVia} onMoveVia={handleMoveVia}/>
+
+            {/* WAYPOINT PANEL below map — always visible when scrolling */}
+            {editMode&&(
+              <WaypointPanel viaPoints={viaPoints} startName={startName}
+                onAdd={handleAddVia} onRemove={handleRemoveVia} onReorder={handleReorder}/>
             )}
 
-            {/* Map */}
-            <RouteMap
-              coords={route.coords} color={typeInfo.color} mapId={`map-${index}`}
-              editMode={editMode} viaCoords={viaCoords} rerouting={rerouting}
-              onAddVia={handleAddVia} onMoveVia={handleMoveVia}
-            />
-
-            {/* Elevation */}
-            <div className="elevation-container">
-              <div className="elevation-title">Höhenprofil</div>
-              <ElevationChart data={route.elevProfile} color={typeInfo.color} />
-            </div>
-
-            {/* Save / GPX */}
+            <div className="elevation-container"><div className="elevation-title">Höhenprofil</div><ElevationChart data={route.elevProfile} color={typeInfo.color}/></div>
             <div className="route-actions">
-              <input className="save-input" placeholder="Tourname…" value={saveName} onChange={e => setSaveName(e.target.value)} />
-              <button className="btn-sm" onClick={() => { if (saveName.trim()) { onSave(route, saveName.trim()); setSaveName(''); } }}>💾 Speichern</button>
-              <button className="btn-sm" onClick={() => downloadGPX(saveName || typeInfo.label, route.coords)}>⬇️ GPX</button>
+              <input className="save-input" placeholder="Tourname…" value={saveName} onChange={e=>setSaveName(e.target.value)}/>
+              <button className="btn-sm" onClick={()=>{if(saveName.trim()){onSave(route,saveName.trim());setSaveName('');}}}>💾 Speichern</button>
+              <button className="btn-sm" onClick={()=>downloadGPX(saveName||typeInfo.label,route.coords)}>⬇️ GPX</button>
             </div>
           </>
         )}
@@ -663,42 +536,69 @@
     );
   }
 
-  // ── SavedRouteCard ────────────────────────────────────────────────────────
-
-  function SavedRouteCard({ tour, index, onDelete }) {
-    const [expanded, setExpanded] = useState(false);
-    const ti = ROUTE_TYPES.find(t => t.id === tour.route.type) || ROUTE_TYPES[0];
-    const diff = calcDifficulty(tour.route.distKm, tour.route.elevUp);
-    return (
-      <div className={`saved-card ${expanded ? 'expanded' : ''}`}>
-        <div className="saved-card-header" onClick={() => setExpanded(e => !e)}>
-          <span style={{ fontSize:22 }}>{ti.icon}</span>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div className="saved-card-name">{tour.name}</div>
-            <div className="saved-card-meta">
-              <span>{tour.route.distKm} km</span><span>·</span>
-              <span>↑{tour.route.elevUp}m</span><span>·</span>
-              <span className={`difficulty-badge ${diff.cls}`} style={{ fontSize:10, padding:'2px 7px' }}>{diff.label}</span>
-              <span>·</span><span style={{ color: ti.color }}>{ti.label}</span>
-            </div>
+  // ── Manual route card (main area) ─────────────────────────────────────────
+  function ManualRouteCard({route,loading,speedKmh,waypoints,onSave,error}){
+    const [saveName,setSaveName]=useState('');
+    if(loading)return(
+      <div className="spinner-overlay"><div className="spinner"/><div>Berechne Route…</div></div>
+    );
+    if(error)return(
+      <div className="error-box"><span style={{fontSize:20,flexShrink:0}}>⚠️</span><div><strong>Fehler:</strong> {error}<br/><span style={{fontSize:12,opacity:0.7}}>Prüfe API-Key und Internetverbindung.</span></div></div>
+    );
+    if(!route)return(
+      <div className="empty-state"><div className="empty-icon">🗺️</div><div className="empty-title">Route wird berechnet…</div><div className="empty-text">Füge mindestens 2 Wegpunkte in der linken Sidebar hinzu.</div></div>
+    );
+    const diff=calcDifficulty(route.distKm,route.elevUp);
+    const dur=formatDuration(route.distKm,speedKmh);
+    return(
+      <div className="route-card selected">
+        <div className="route-card-header" style={{cursor:'default'}}>
+          <div className="route-type-badge">
+            <div className="route-icon manual">🗺️</div>
+            <div><div className="route-name">Manuelle Route</div><div className="route-tagline">{waypoints.length} Wegpunkte · Deine eigene Strecke</div></div>
           </div>
-          <div className="saved-card-btns" onClick={e => e.stopPropagation()}>
-            <button className="btn-sm" onClick={() => downloadGPX(tour.name, tour.route.coords)}>⬇️ GPX</button>
-            <button className="btn-danger" onClick={() => onDelete(index)}>🗑️</button>
-          </div>
-          <span style={{ color:'#64748b', fontSize:13, marginLeft:6 }}>{expanded ? '▲' : '▼'}</span>
+          <span className={`difficulty-badge ${diff.cls}`}>{diff.label}</span>
         </div>
-        {expanded && (
+        <div className="route-stats">
+          {[{icon:'📏',v:route.distKm,l:'km'},{icon:'⬆️',v:route.elevUp,l:'m Aufstieg'},{icon:'⬇️',v:route.elevDown,l:'m Abstieg'},{icon:'⏱️',v:dur,l:'Dauer',sm:true}].map(({icon,v,l,sm})=>(
+            <div key={l} className="stat-item"><div style={{fontSize:13,marginBottom:2}}>{icon}</div><div className="stat-value" style={sm?{fontSize:14}:{}}>{v}</div><div className="stat-label">{l}</div></div>
+          ))}
+        </div>
+        <RouteMap coords={route.coords} color="#6366f1" mapId="manual-map" allMarkers={waypoints}/>
+        <div className="elevation-container"><div className="elevation-title">Höhenprofil</div><ElevationChart data={route.elevProfile} color="#6366f1"/></div>
+        <div className="route-actions">
+          <input className="save-input" placeholder="Tourname…" value={saveName} onChange={e=>setSaveName(e.target.value)}/>
+          <button className="btn-sm" onClick={()=>{if(saveName.trim()){onSave(route,saveName.trim());setSaveName('');}}}>💾 Speichern</button>
+          <button className="btn-sm" onClick={()=>downloadGPX(saveName||'Manuelle Route',route.coords)}>⬇️ GPX</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── SavedRouteCard ────────────────────────────────────────────────────────
+  function SavedRouteCard({tour,index,onDelete}){
+    const [expanded,setExpanded]=useState(false);
+    const ti=ROUTE_TYPES.find(t=>t.id===tour.route.type)||{icon:'🗺️',label:'Manuell',color:'#6366f1'};
+    const diff=calcDifficulty(tour.route.distKm,tour.route.elevUp);
+    return(
+      <div className={`saved-card ${expanded?'expanded':''}`}>
+        <div className="saved-card-header" onClick={()=>setExpanded(e=>!e)}>
+          <span style={{fontSize:20}}>{ti.icon}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div className="saved-card-name">{tour.name}</div>
+            <div className="saved-card-meta"><span>{tour.route.distKm} km</span><span>·</span><span>↑{tour.route.elevUp}m</span><span>·</span><span className={`difficulty-badge ${diff.cls}`} style={{fontSize:10,padding:'2px 6px'}}>{diff.label}</span><span>·</span><span style={{color:ti.color}}>{ti.label}</span></div>
+          </div>
+          <div className="saved-card-btns" onClick={e=>e.stopPropagation()}>
+            <button className="btn-sm" onClick={()=>downloadGPX(tour.name,tour.route.coords)}>⬇️ GPX</button>
+            <button className="btn-danger" onClick={()=>onDelete(index)}>🗑️</button>
+          </div>
+          <span style={{color:'#64748b',fontSize:13,marginLeft:5}}>{expanded?'▲':'▼'}</span>
+        </div>
+        {expanded&&(
           <>
-            <RouteMap coords={tour.route.coords} color={ti.color} mapId={`saved-map-${index}`}
-              editMode={false} viaCoords={[]} rerouting={false} onAddVia={() => {}} onMoveVia={() => {}} />
-            <div className="elevation-container">
-              <div className="elevation-title">Höhenprofil</div>
-              <ElevationChart data={tour.route.elevProfile} color={ti.color} />
-            </div>
-            <div className="route-actions">
-              <button className="btn-sm" style={{ marginLeft:'auto' }} onClick={() => downloadGPX(tour.name, tour.route.coords)}>⬇️ GPX herunterladen</button>
-            </div>
+            <RouteMap coords={tour.route.coords} color={ti.color} mapId={`saved-map-${index}`}/>
+            <div className="elevation-container"><div className="elevation-title">Höhenprofil</div><ElevationChart data={tour.route.elevProfile} color={ti.color}/></div>
+            <div className="route-actions"><button className="btn-sm" style={{marginLeft:'auto'}} onClick={()=>downloadGPX(tour.name,tour.route.coords)}>⬇️ GPX herunterladen</button></div>
           </>
         )}
       </div>
@@ -706,152 +606,281 @@
   }
 
   // ── ProfilePanel ──────────────────────────────────────────────────────────
-
-  function ProfilePanel({ profile, onChange }) {
-    return (
+  function ProfilePanel({profile,onChange}){
+    return(
       <div>
         <div className="profile-card">
           <div className="profile-avatar">🚴</div>
-          <div className="form-group">
-            <label>Name</label>
-            <input type="text" value={profile.name} onChange={e => onChange({ ...profile, name: e.target.value })} placeholder="Dein Name" />
-          </div>
+          <div className="form-group"><label>Name</label><input type="text" value={profile.name} onChange={e=>onChange({...profile,name:e.target.value})} placeholder="Dein Name"/></div>
           <div className="form-group">
             <label>Durchschnittsgeschwindigkeit</label>
-            <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e => onChange({ ...profile, speed: +e.target.value })} />
+            <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>onChange({...profile,speed:+e.target.value})}/>
             <div className="range-display"><span className="range-value">{profile.speed}</span><span className="range-unit">km/h</span></div>
           </div>
         </div>
-        <div style={{ background:'#1e293b', borderRadius:12, border:'1px solid #334155', padding:16, fontSize:13, color:'#94a3b8', lineHeight:1.7 }}>
-          <strong style={{ color:'#f8fafc', display:'block', marginBottom:6 }}>OpenRouteService API-Key</strong>
-          Kostenlosen Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer" style={{ color:'#60a5fa' }}>openrouteservice.org</a> (2.000 Anfragen/Tag gratis) und links eintragen.
+        <div style={{background:'#1e293b',borderRadius:11,border:'1px solid #334155',padding:14,fontSize:13,color:'#94a3b8',lineHeight:1.7}}>
+          <strong style={{color:'#f8fafc',display:'block',marginBottom:5}}>OpenRouteService API-Key</strong>
+          Kostenlosen Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer" style={{color:'#60a5fa'}}>openrouteservice.org</a> (2.000 Anfragen/Tag) und links eintragen.
         </div>
       </div>
     );
   }
 
   // ── App ───────────────────────────────────────────────────────────────────
+  function App(){
+    // shared
+    const [apiKey,setApiKey]=useState('');
+    const [planMode,setPlanMode]=useState('roundtrip'); // 'roundtrip'|'manual'
+    const [profile,setProfile]=useState({name:'Fahrer',speed:25});
+    const [savedTours,setSavedTours]=useState([]);
+    const [activeTab,setActiveTab]=useState('routes');
 
-  function App() {
-    const [apiKey,     setApiKey]     = useState('');
-    const [startCoord, setStartCoord] = useState(null);
-    const [startLabel, setStartLabel] = useState('');
-    const [distKm,     setDistKm]     = useState(80);
-    const [surfaces,   setSurfaces]   = useState(['asphalt']);
-    const [loading,    setLoading]    = useState(false);
-    const [error,      setError]      = useState('');
-    const [routes,     setRoutes]     = useState([]);
-    const [savedTours, setSavedTours] = useState([]);
-    const [profile,    setProfile]    = useState({ name: 'Fahrer', speed: 25 });
-    const [activeTab,  setActiveTab]  = useState('routes');
+    // round-trip
+    const [startCoord,setStartCoord]=useState(null);
+    const [startLabel,setStartLabel]=useState('');
+    const [distKm,setDistKm]=useState(80);
+    const [surfaces,setSurfaces]=useState(['asphalt']);
+    const [rtLoading,setRtLoading]=useState(false);
+    const [rtError,setRtError]=useState('');
+    const [rtRoutes,setRtRoutes]=useState([]);
 
-    const planRoutes = async () => {
-      if (!apiKey.trim())   { setError('Bitte trage deinen OpenRouteService API-Key ein.'); return; }
-      if (!startCoord)      { setError('Bitte wähle einen gültigen Startpunkt aus der Liste.'); return; }
-      if (!surfaces.length) { setError('Bitte wähle mindestens einen Belagstyp.'); return; }
-      setLoading(true); setError(''); setRoutes([]);
-      try {
-        const results = await Promise.all(ROUTE_TYPES.map(async type => {
-          const feature = await fetchRoundTrip(apiKey, startCoord, distKm, type.pref, type.seed);
-          return parseFeature(feature, type.id);
+    // manual
+    const [manWaypoints,setManWaypoints]=useState([]); // [{coord,name}]
+    const [manPref,setManPref]=useState('recommended');
+    const [manLoop,setManLoop]=useState(false);
+    const [manRoute,setManRoute]=useState(null);
+    const [manLoading,setManLoading]=useState(false);
+    const [manError,setManError]=useState('');
+    const manWpRef=useRef([]);
+    const manReqId=useRef(0);
+
+    // ── Round-trip planning ──
+    const planRoundTrips=async()=>{
+      if(!apiKey.trim()){setRtError('Bitte trage deinen API-Key ein.');return;}
+      if(!startCoord){setRtError('Bitte wähle einen gültigen Startpunkt.');return;}
+      setRtLoading(true);setRtError('');setRtRoutes([]);
+      try{
+        const results=await Promise.all(ROUTE_TYPES.map(async t=>{
+          const feat=await fetchRoundTrip(apiKey,startCoord,distKm,t.pref,t.seed);
+          return parseFeature(feat,t.id);
         }));
-        setRoutes(results); setActiveTab('routes');
-      } catch (e) { setError(e.message || 'Unbekannter Fehler.'); }
-      finally { setLoading(false); }
+        setRtRoutes(results);setActiveTab('routes');
+      }catch(e){setRtError(e.message||'Fehler bei der Routenplanung.');}
+      finally{setRtLoading(false);}
     };
 
-    return (
+    // ── Manual route auto-recalc ──
+    const recalcManual=useCallback(async(wps,pref,loop)=>{
+      if(!apiKey.trim()||wps.length<2){setManRoute(null);return;}
+      const id=++manReqId.current;setManLoading(true);setManError('');
+      try{
+        const coords=wps.map(w=>w.coord);
+        const waypoints=loop?[...coords,coords[0]]:coords;
+        const feat=await fetchViaRoute(apiKey,waypoints,pref);
+        if(id!==manReqId.current)return;
+        setManRoute(parseFeature(feat,'manual'));
+      }catch(e){if(id===manReqId.current)setManError(e.message);}
+      finally{if(id===manReqId.current)setManLoading(false);}
+    },[apiKey]);
+
+    const updateManWaypoints=useCallback(nv=>{
+      manWpRef.current=nv;setManWaypoints(nv);recalcManual(nv,manPref,manLoop);
+    },[recalcManual,manPref,manLoop]);
+
+    // Re-calc when pref/loop changes
+    useEffect(()=>{if(manWpRef.current.length>=2)recalcManual(manWpRef.current,manPref,manLoop);},[manPref,manLoop,recalcManual]);
+
+    const addManWp=useCallback(async(coord,nameOvr)=>{
+      const name=nameOvr||await reverseGeocode(coord[0],coord[1]);
+      updateManWaypoints([...manWpRef.current,{coord,name}]);
+    },[updateManWaypoints]);
+    const removeManWp=useCallback(i=>updateManWaypoints(manWpRef.current.filter((_,j)=>j!==i)),[updateManWaypoints]);
+    const reorderManWp=useCallback((from,to)=>{
+      if(to<0||to>=manWpRef.current.length)return;
+      const nv=[...manWpRef.current];[nv[from],nv[to]]=[nv[to],nv[from]];updateManWaypoints(nv);
+    },[updateManWaypoints]);
+
+    return(
       <>
+        {/* ── SIDEBAR ── */}
         <aside className="sidebar">
           <div className="sidebar-header">
-            <div className="app-title"><span style={{ fontSize:28 }}>🚴</span><div><div>Rennrad Planer</div><div className="app-subtitle">Rundtouren für jeden Anspruch</div></div></div>
+            <div className="app-title"><span style={{fontSize:26}}>🚴</span><div><div>Rennrad Planer</div><div className="app-subtitle">Routen für jeden Anspruch</div></div></div>
           </div>
+
+          {/* Mode selector */}
+          <div className="sidebar-section">
+            <div className="mode-tabs">
+              <button className={`mode-tab ${planMode==='roundtrip'?'active':''}`} onClick={()=>setPlanMode('roundtrip')}>🔄 Rundtour</button>
+              <button className={`mode-tab ${planMode==='manual'?'active':''}`} onClick={()=>setPlanMode('manual')}>📍 Manuell</button>
+            </div>
+          </div>
+
+          {/* API Key */}
           <div className="sidebar-section">
             <div className="section-title">🔑 API-Zugang</div>
-            <div className="api-key-notice">Kostenloser Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer">openrouteservice.org</a> — 2.000 Anfragen/Tag gratis.</div>
-            <div className="form-group"><label>OpenRouteService API-Key</label><input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="5b3ce3…" /></div>
-          </div>
-          <div className="sidebar-section">
-            <div className="section-title">📍 Startpunkt & Distanz</div>
-            <div className="form-group">
-              <label>Startpunkt (Rundtour)</label>
-              <LocationInput onConfirm={(coord, label) => { setStartCoord(coord); setStartLabel(label || ''); }} />
-            </div>
-            <div className="form-group">
-              <label>Streckenlänge</label>
-              <input type="range" min="20" max="250" step="5" value={distKm} onChange={e => setDistKm(+e.target.value)} />
-              <div className="range-display"><span className="range-value">{distKm}</span><span className="range-unit">km</span></div>
-            </div>
-          </div>
-          <div className="sidebar-section">
-            <div className="section-title">🛤️ Belagsarten</div>
-            <div className="surface-grid">
-              {SURFACE_OPTIONS.map(s => (
-                <label key={s.id} className={`surface-chip ${surfaces.includes(s.id) ? 'active' : ''}`}>
-                  <input type="checkbox" checked={surfaces.includes(s.id)} onChange={() => setSurfaces(prev => prev.includes(s.id) ? prev.filter(x => x !== s.id) : [...prev, s.id])} style={{ display:'none' }} />
-                  <span>{s.icon}</span><span>{s.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="sidebar-section">
-            <div className="section-title">⚡ Geschwindigkeit</div>
-            <div className="form-group">
-              <label>Ø <strong style={{ color:'#3b82f6' }}>{profile.speed} km/h</strong></label>
-              <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e => setProfile(p => ({ ...p, speed: +e.target.value }))} />
-            </div>
-          </div>
-          <div className="sidebar-section">
-            <button className="btn-primary" onClick={planRoutes} disabled={loading}>
-              {loading ? <><span className="spin-inline" /> Plane Routen…</> : <><span>🔄</span> 3 Rundtouren planen</>}
-            </button>
-          </div>
-        </aside>
-
-        <main className="main">
-          <div className="tabs">
-            <button className={`tab ${activeTab==='routes'  ? 'active':''}`} onClick={() => setActiveTab('routes')}>🗺️ Routen{routes.length > 0 ? ` (${routes.length})` : ''}</button>
-            <button className={`tab ${activeTab==='saved'   ? 'active':''}`} onClick={() => setActiveTab('saved')}>💾 Gespeichert{savedTours.length > 0 ? ` (${savedTours.length})` : ''}</button>
-            <button className={`tab ${activeTab==='profile' ? 'active':''}`} onClick={() => setActiveTab('profile')}>👤 Profil</button>
+            <div className="api-key-notice">Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer">openrouteservice.org</a> — 2.000/Tag gratis.</div>
+            <input type="text" value={apiKey} onChange={e=>setApiKey(e.target.value)} placeholder="5b3ce3…"/>
           </div>
 
-          {error && <div className="error-box"><span style={{ fontSize:20, flexShrink:0 }}>⚠️</span><div><strong>Fehler:</strong> {error}<br /><span style={{ fontSize:12, opacity:0.7 }}>Prüfe API-Key, Startpunkt und Internetverbindung.</span></div></div>}
-
-          {activeTab === 'routes' && (
+          {/* ── RUNDTOUR mode ── */}
+          {planMode==='roundtrip'&&(
             <>
-              {loading && <div className="spinner-overlay"><div className="spinner" /><div>Berechne 3 Rundtouren…</div><div style={{ fontSize:12, marginTop:4 }}>Das kann einige Sekunden dauern</div></div>}
-              {!loading && routes.length === 0 && (
-                <div className="empty-state">
-                  <div className="empty-icon">🔄</div>
-                  <div className="empty-title">Bereit für deine Rundtour?</div>
-                  <div className="empty-text">Wähle Startpunkt und Distanz,<br />dann „3 Rundtouren planen".</div>
+              <div className="sidebar-section">
+                <div className="section-title">📍 Startpunkt & Distanz</div>
+                <div className="form-group">
+                  <label>Startpunkt</label>
+                  <GeoSearch mode="confirm" placeholder="Ort, Adresse oder Koordinaten" onSelect={(coord,label)=>{setStartCoord(coord);setStartLabel(label||'');}} onClear={()=>{setStartCoord(null);setStartLabel('');}}/>
                 </div>
-              )}
-              {!loading && routes.length > 0 && (
-                <div className="routes-grid">
-                  {routes.map((route, i) => (
-                    <RouteCard key={i} index={i} initialRoute={route} apiKey={apiKey} startLabel={startLabel}
-                      typeInfo={ROUTE_TYPES.find(t => t.id === route.type)} speedKmh={profile.speed}
-                      onSave={(r, name) => setSavedTours(prev => [...prev, { name, route: r }])} />
+                <div className="form-group">
+                  <label>Streckenlänge</label>
+                  <input type="range" min="20" max="250" step="5" value={distKm} onChange={e=>setDistKm(+e.target.value)}/>
+                  <div className="range-display"><span className="range-value">{distKm}</span><span className="range-unit">km</span></div>
+                </div>
+              </div>
+              <div className="sidebar-section">
+                <div className="section-title">🛤️ Belagsarten</div>
+                <div className="surface-grid">
+                  {SURFACE_OPTIONS.map(s=>(
+                    <label key={s.id} className={`surface-chip ${surfaces.includes(s.id)?'active':''}`}>
+                      <input type="checkbox" checked={surfaces.includes(s.id)} onChange={()=>setSurfaces(p=>p.includes(s.id)?p.filter(x=>x!==s.id):[...p,s.id])} style={{display:'none'}}/>
+                      <span>{s.icon}</span><span>{s.label}</span>
+                    </label>
                   ))}
                 </div>
+              </div>
+              <div className="sidebar-section">
+                <div className="section-title">⚡ Geschwindigkeit</div>
+                <label>Ø <strong style={{color:'#3b82f6'}}>{profile.speed} km/h</strong></label>
+                <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>setProfile(p=>({...p,speed:+e.target.value}))}/>
+              </div>
+              <div className="sidebar-section">
+                <button className="btn-primary" onClick={planRoundTrips} disabled={rtLoading}>
+                  {rtLoading?<><span className="spin-inline"/> Plane Routen…</>:<><span>🔄</span> 3 Rundtouren planen</>}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ── MANUAL mode ── */}
+          {planMode==='manual'&&(
+            <>
+              <div className="sidebar-section" style={{flex:1}}>
+                <div className="section-title">📍 Wegpunkte</div>
+                <div className="mwp-list">
+                  {manWaypoints.length===0&&<div className="mwp-empty">Noch keine Wegpunkte.<br/>Füge Orte in der gewünschten Reihenfolge hinzu.</div>}
+                  {manWaypoints.map((wp,i)=>{
+                    const isFirst=i===0,isLast=i===manWaypoints.length-1&&manWaypoints.length>1;
+                    return(
+                      <div key={i} className="mwp-row">
+                        <span className={`mwp-badge ${isFirst?'first':isLast&&!manLoop?'last':''}`} style={(!isFirst&&!(isLast&&!manLoop))?{background:'#6366f1'}:{}}>
+                          {isFirst?'🟢':isLast&&!manLoop?'🔴':i+1}
+                        </span>
+                        <span className="mwp-name" title={wp.name}>{wp.name}</span>
+                        <div className="mwp-actions">
+                          <button className="mwp-btn" onClick={()=>reorderManWp(i,i-1)} disabled={i===0}>↑</button>
+                          <button className="mwp-btn" onClick={()=>reorderManWp(i,i+1)} disabled={i===manWaypoints.length-1}>↓</button>
+                          <button className="mwp-btn del" onClick={()=>removeManWp(i)}>✕</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {manLoop&&manWaypoints.length>0&&(
+                    <div className="mwp-row" style={{opacity:0.5}}>
+                      <span className="mwp-badge last">🔴</span>
+                      <span className="mwp-name" style={{color:'#86efac'}}>{manWaypoints[0].name} (Ziel)</span>
+                    </div>
+                  )}
+                </div>
+                <div style={{marginTop:10}}>
+                  <GeoSearch mode="oneshot" placeholder="➕ Ort suchen oder Koordinaten…" onSelect={addManWp}/>
+                </div>
+              </div>
+
+              <div className="sidebar-section">
+                <div className="section-title">🔀 Routenpräferenz</div>
+                <div className="pref-row">
+                  {PREFS.map(p=>(
+                    <button key={p.id} className={`pref-btn ${manPref===p.id?'active':''}`} onClick={()=>setManPref(p.id)}>{p.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sidebar-section">
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#94a3b8'}}>
+                  <input type="checkbox" checked={manLoop} onChange={e=>setManLoop(e.target.checked)} style={{accentColor:'#6366f1',width:14,height:14}}/>
+                  Rundtour (zurück zum Startpunkt)
+                </label>
+              </div>
+
+              <div className="sidebar-section">
+                <div className="section-title">⚡ Geschwindigkeit</div>
+                <label>Ø <strong style={{color:'#3b82f6'}}>{profile.speed} km/h</strong></label>
+                <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>setProfile(p=>({...p,speed:+e.target.value}))}/>
+              </div>
+            </>
+          )}
+        </aside>
+
+        {/* ── MAIN ── */}
+        <main className="main">
+          <div className="tabs">
+            <button className={`tab ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>🗺️ Routen{planMode==='roundtrip'&&rtRoutes.length>0?` (${rtRoutes.length})`:planMode==='manual'&&manRoute?' (1)':''}</button>
+            <button className={`tab ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>💾 Gespeichert{savedTours.length>0?` (${savedTours.length})`:''}</button>
+            <button className={`tab ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>👤 Profil</button>
+          </div>
+
+          {activeTab==='routes'&&(
+            <>
+              {/* Roundtrip mode */}
+              {planMode==='roundtrip'&&(
+                <>
+                  {rtError&&<div className="error-box"><span style={{fontSize:19,flexShrink:0}}>⚠️</span><div><strong>Fehler:</strong> {rtError}</div></div>}
+                  {rtLoading&&<div className="spinner-overlay"><div className="spinner"/><div>Berechne 3 Rundtouren…</div></div>}
+                  {!rtLoading&&rtRoutes.length===0&&(
+                    <div className="empty-state"><div className="empty-icon">🔄</div><div className="empty-title">Bereit für deine Rundtour?</div><div className="empty-text">Wähle links Startpunkt und Distanz, dann „3 Rundtouren planen".</div></div>
+                  )}
+                  {!rtLoading&&rtRoutes.length>0&&(
+                    <div className="routes-grid">
+                      {rtRoutes.map((r,i)=>(
+                        <RouteCard key={i} index={i} initialRoute={r} apiKey={apiKey} startLabel={startLabel}
+                          typeInfo={ROUTE_TYPES.find(t=>t.id===r.type)} speedKmh={profile.speed}
+                          onSave={(r,n)=>setSavedTours(p=>[...p,{name:n,route:r}])}/>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Manual mode */}
+              {planMode==='manual'&&(
+                <>
+                  {manWaypoints.length<2&&!manLoading&&!manRoute&&(
+                    <div className="empty-state"><div className="empty-icon">📍</div><div className="empty-title">Manuelle Route erstellen</div><div className="empty-text">Füge links mindestens 2 Wegpunkte hinzu.<br/>Die Route wird automatisch berechnet und aktualisiert sich beim Umsortieren.</div></div>
+                  )}
+                  {(manLoading||manRoute||manError)&&(
+                    <ManualRouteCard route={manRoute} loading={manLoading} error={manError}
+                      speedKmh={profile.speed} waypoints={manWaypoints}
+                      onSave={(r,n)=>setSavedTours(p=>[...p,{name:n,route:r}])}/>
+                  )}
+                </>
               )}
             </>
           )}
 
-          {activeTab === 'saved' && (
-            savedTours.length === 0
-              ? <div className="empty-state"><div className="empty-icon">🗺️</div><div className="empty-title">Noch keine Touren gespeichert</div><div className="empty-text">Plane eine Route und speichere sie hier.</div></div>
-              : <div>{savedTours.map((tour, i) => <SavedRouteCard key={i} tour={tour} index={i} onDelete={j => setSavedTours(prev => prev.filter((_,k) => k !== j))} />)}</div>
+          {activeTab==='saved'&&(
+            savedTours.length===0
+              ?<div className="empty-state"><div className="empty-icon">🗺️</div><div className="empty-title">Noch keine Touren gespeichert</div><div className="empty-text">Plane eine Route und speichere sie hier.</div></div>
+              :<div>{savedTours.map((t,i)=><SavedRouteCard key={i} tour={t} index={i} onDelete={j=>setSavedTours(p=>p.filter((_,k)=>k!==j))}/>)}</div>
           )}
 
-          {activeTab === 'profile' && <ProfilePanel profile={profile} onChange={setProfile} />}
+          {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile}/>}
         </main>
       </>
     );
   }
 
-  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
