@@ -767,102 +767,118 @@
   }
 
   // ── ProfilePanel ──────────────────────────────────────────────────────────
-  function ProfilePanel({profile,onChange}){
-    return(
-      <div>
-        <div className="profile-card">
-          <div className="profile-avatar">🚴</div>
-          <div className="form-group"><label>Name</label><input type="text" value={profile.name} onChange={e=>onChange({...profile,name:e.target.value})} placeholder="Dein Name"/></div>
-          <div className="form-group">
-            <label>Durchschnittsgeschwindigkeit</label>
-            <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>onChange({...profile,speed:+e.target.value})}/>
-            <div className="range-display"><span className="range-value">{profile.speed}</span><span className="range-unit">km/h</span></div>
-          </div>
-        </div>
-        <div style={{background:'#1e293b',borderRadius:11,border:'1px solid #334155',padding:14,fontSize:13,color:'#94a3b8',lineHeight:1.7}}>
-          <strong style={{color:'#f8fafc',display:'block',marginBottom:5}}>OpenRouteService API-Key</strong>
-          Kostenlosen Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer" style={{color:'#60a5fa'}}>openrouteservice.org</a> (2.000 Anfragen/Tag) und links eintragen.
-        </div>
-      </div>
-    );
-  }
-
-  // ── Trainer: Setup form ───────────────────────────────────────────────────
-  function TrainerSetup({onCreate}){
-    const [step,setStep]=useState(1);
-    const [profile,setProfile]=useState({age:'',weight:'',fitnessLevel:'intermediate',weeklyKm:'',ftp:''});
-    const [goal,setGoal]=useState({eventName:'',targetDate:'',distanceKm:'',targetSpeedKmh:''});
-    const sp=k=>v=>setProfile(p=>({...p,[k]:v}));
-    const sg=k=>v=>setGoal(g=>({...g,[k]:v}));
+  function ProfilePanel({profile,onChange,onExport,onImport}){
+    const fileRef=useRef(null);
+    const ch=k=>e=>onChange({...profile,[k]:e.target.value});
     const fitOpts=[
       {id:'beginner',   icon:'🌱',label:'Einsteiger',      sub:'< 50 km/Woche'},
       {id:'intermediate',icon:'🚴',label:'Fortgeschritten',sub:'50–150 km/Woche'},
       {id:'advanced',   icon:'🏆',label:'Erfahren',        sub:'> 150 km/Woche'},
     ];
-    const ok1=profile.age&&profile.weight;
-    const ok2=goal.targetDate&&goal.distanceKm&&goal.targetSpeedKmh;
-    const raceHrs=ok2?parseFloat(goal.distanceKm)/parseFloat(goal.targetSpeedKmh):0;
+    return(
+      <div>
+        {/* Fahrerprofil */}
+        <div className="profile-card">
+          <div className="profile-avatar">🚴</div>
+          <div style={{fontSize:12,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.6px',marginBottom:10}}>Allgemein</div>
+          <div className="form-group"><label>Name</label><input type="text" value={profile.name||''} onChange={ch('name')} placeholder="Dein Name"/></div>
+          <div className="form-group">
+            <label>Ø Geschwindigkeit auf der Route</label>
+            <input type="range" min="10" max="45" step="1" value={profile.speed||25} onChange={e=>onChange({...profile,speed:+e.target.value})}/>
+            <div className="range-display"><span className="range-value">{profile.speed||25}</span><span className="range-unit">km/h</span></div>
+          </div>
+          <div style={{fontSize:12,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.6px',margin:'14px 0 10px'}}>Körper & Fitness</div>
+          <div className="log-grid2" style={{marginBottom:12}}>
+            <div className="form-group"><label>Alter (Jahre)</label><input type="number" min="10" max="90" value={profile.age||''} onChange={ch('age')} placeholder="z. B. 38"/></div>
+            <div className="form-group"><label>Gewicht (kg)</label><input type="number" min="30" max="200" value={profile.weight||''} onChange={ch('weight')} placeholder="z. B. 75"/></div>
+            <div className="form-group"><label>km/Woche aktuell</label><input type="number" min="0" value={profile.weeklyKm||''} onChange={ch('weeklyKm')} placeholder="z. B. 80"/></div>
+            <div className="form-group"><label>FTP (Watt, optional)</label><input type="number" min="0" value={profile.ftp||''} onChange={ch('ftp')} placeholder="z. B. 220"/></div>
+          </div>
+          <div className="form-group">
+            <label>Fitnesslevel</label>
+            <div className="fitness-options">
+              {fitOpts.map(f=>(
+                <div key={f.id} className={`fitness-opt ${(profile.fitnessLevel||'intermediate')===f.id?'active':''}`} onClick={()=>onChange({...profile,fitnessLevel:f.id})}>
+                  <div className="fitness-opt-icon">{f.icon}</div>
+                  <div className="fitness-opt-label">{f.label}</div>
+                  <div className="fitness-opt-sub">{f.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* API Key */}
+        <div style={{background:'#1e293b',borderRadius:11,border:'1px solid #334155',padding:14,fontSize:13,color:'#94a3b8',lineHeight:1.7,marginBottom:14}}>
+          <strong style={{color:'#f8fafc',display:'block',marginBottom:5}}>OpenRouteService API-Key</strong>
+          Kostenlosen Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer" style={{color:'#60a5fa'}}>openrouteservice.org</a> (2.000 Anfragen/Tag) und links eintragen.
+        </div>
+
+        {/* Backup */}
+        <div style={{background:'#1e293b',borderRadius:12,border:'1px solid #334155',padding:16}}>
+          <div style={{fontSize:14,fontWeight:600,color:'#f8fafc',marginBottom:4}}>🔒 Datensicherung</div>
+          <div style={{fontSize:12,color:'#64748b',marginBottom:14,lineHeight:1.6}}>Exportiere alle Daten (Profil, gespeicherte Routen, Trainingsplan + Leistungslogs) als JSON-Datei oder stelle sie aus einem Backup wieder her.</div>
+          <div style={{display:'flex',gap:8}}>
+            <button className="btn-primary" style={{flex:1,background:'linear-gradient(135deg,#0f172a,#1e293b)',border:'1px solid #334155'}} onClick={onExport}>⬇️ Backup exportieren</button>
+            <button className="btn-primary" style={{flex:1,background:'linear-gradient(135deg,#0f172a,#1e293b)',border:'1px solid #334155'}} onClick={()=>fileRef.current?.click()}>⬆️ Backup laden</button>
+          </div>
+          <input ref={fileRef} type="file" accept=".json" style={{display:'none'}}
+            onChange={e=>{
+              const f=e.target.files?.[0];
+              if(!f)return;
+              const r=new FileReader();
+              r.onload=ev=>{try{onImport(JSON.parse(ev.target.result));}catch{alert('Ungültige Backup-Datei.');}};
+              r.readAsText(f);
+              e.target.value='';
+            }}/>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Trainer: Setup form (goal only — profile lives in 👤 Profil tab) ──────
+  function TrainerSetup({onCreate,profile}){
+    const [goal,setGoal]=useState({eventName:'',targetDate:'',distanceKm:'',targetSpeedKmh:''});
+    const sg=k=>v=>setGoal(g=>({...g,[k]:v}));
+    const ok=goal.targetDate&&goal.distanceKm&&goal.targetSpeedKmh;
+    const hasProfile=profile.age&&profile.weight;
+    const raceHrs=ok?parseFloat(goal.distanceKm)/parseFloat(goal.targetSpeedKmh):0;
+    const FL={beginner:'🌱 Einsteiger',intermediate:'🚴 Fortgeschritten',advanced:'🏆 Erfahren'};
     return(
       <div className="setup-card">
         <div className="setup-title">🏋️ Trainingsberater</div>
-        <div className="setup-subtitle">Gib dein Profil und Ziel ein — du bekommst einen personalisierten Trainingsplan.</div>
-        <div className="step-indicator">
-          {[1,2].map(n=>(
-            <React.Fragment key={n}>
-              <div className="step-dot" style={{width:step===n?12:8,height:step===n?12:8,background:step>=n?'#6366f1':'#334155'}}/>
-              {n<2&&<div style={{flex:1,height:2,background:'#334155',borderRadius:1}}/>}
-            </React.Fragment>
-          ))}
-          <span style={{fontSize:11,color:'#64748b',marginLeft:8}}>Schritt {step} von 2</span>
+        <div className="setup-subtitle">Gib dein Wettkampfziel ein — der Plan basiert automatisch auf deinem Profil.</div>
+        {hasProfile?(
+          <div style={{background:'rgba(99,102,241,0.08)',border:'1px solid rgba(99,102,241,0.2)',borderRadius:9,padding:'10px 12px',fontSize:12,color:'#a5b4fc',marginBottom:16,display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+            <span>🚴 {profile.name||'Fahrer'}</span>
+            {profile.age&&<span>Alter: {profile.age} J.</span>}
+            {profile.weight&&<span>Gewicht: {profile.weight} kg</span>}
+            <span>{FL[profile.fitnessLevel]||FL.intermediate}</span>
+            {profile.weeklyKm&&<span>~{profile.weeklyKm} km/Woche</span>}
+            {profile.ftp&&<span>FTP: {profile.ftp} W</span>}
+          </div>
+        ):(
+          <div style={{background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.3)',borderRadius:9,padding:'10px 12px',fontSize:12,color:'#fcd34d',marginBottom:16}}>
+            ⚠️ Ergänze zuerst dein Profil im Tab <strong>👤 Profil</strong> (Alter, Gewicht, Fitnesslevel) für einen genaueren Plan.
+          </div>
+        )}
+        <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:12}}>Wettkampfziel</div>
+        <div className="log-field"><label>Veranstaltung / Rennen (optional)</label><input className="log-input" type="text" value={goal.eventName} onChange={e=>sg('eventName')(e.target.value)} placeholder="z. B. Ötztal Radmarathon 2026"/></div>
+        <div className="log-grid2">
+          <div className="log-field"><label>Zieldatum</label><input className="log-input" type="date" value={goal.targetDate} onChange={e=>sg('targetDate')(e.target.value)} min={new Date().toISOString().slice(0,10)}/></div>
+          <div className="log-field"><label>Zieldistanz (km)</label><input className="log-input" type="number" min="20" value={goal.distanceKm} onChange={e=>sg('distanceKm')(e.target.value)} placeholder="z. B. 200"/></div>
+          <div className="log-field"><label>Zielschnitt (km/h)</label><input className="log-input" type="number" min="10" max="50" step="0.5" value={goal.targetSpeedKmh} onChange={e=>sg('targetSpeedKmh')(e.target.value)} placeholder="z. B. 26"/></div>
         </div>
-        {step===1&&(
-          <>
-            <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:12}}>Dein aktueller Stand</div>
-            <div className="log-grid2">
-              <div className="log-field"><label>Alter (Jahre)</label><input className="log-input" type="number" min="10" max="90" value={profile.age} onChange={e=>sp('age')(e.target.value)} placeholder="z. B. 38"/></div>
-              <div className="log-field"><label>Gewicht (kg)</label><input className="log-input" type="number" min="30" max="200" value={profile.weight} onChange={e=>sp('weight')(e.target.value)} placeholder="z. B. 75"/></div>
-              <div className="log-field"><label>Aktuelle km/Woche</label><input className="log-input" type="number" min="0" value={profile.weeklyKm} onChange={e=>sp('weeklyKm')(e.target.value)} placeholder="z. B. 80"/></div>
-              <div className="log-field"><label>FTP (Watt, optional)</label><input className="log-input" type="number" min="0" value={profile.ftp} onChange={e=>sp('ftp')(e.target.value)} placeholder="z. B. 220"/></div>
-            </div>
-            <div className="log-field" style={{marginBottom:16}}>
-              <label>Fitnesslevel</label>
-              <div className="fitness-options">
-                {fitOpts.map(f=>(
-                  <div key={f.id} className={`fitness-opt ${profile.fitnessLevel===f.id?'active':''}`} onClick={()=>sp('fitnessLevel')(f.id)}>
-                    <div className="fitness-opt-icon">{f.icon}</div>
-                    <div className="fitness-opt-label">{f.label}</div>
-                    <div className="fitness-opt-sub">{f.sub}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button className="btn-primary indigo" onClick={()=>setStep(2)} disabled={!ok1}>Weiter →</button>
-          </>
+        {ok&&raceHrs>0&&(
+          <div style={{background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#a5b4fc',marginBottom:14}}>
+            Geschätzte Renndauer: {Math.floor(raceHrs)}h {Math.round((raceHrs%1)*60)}min &nbsp;·&nbsp; Plan: {Math.max(4,Math.round((new Date(goal.targetDate)-new Date())/604800000))} Wochen
+          </div>
         )}
-        {step===2&&(
-          <>
-            <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:12}}>Dein Wettkampfziel</div>
-            <div className="log-field"><label>Veranstaltung / Rennen (optional)</label><input className="log-input" type="text" value={goal.eventName} onChange={e=>sg('eventName')(e.target.value)} placeholder="z. B. Ötztal Radmarathon 2026"/></div>
-            <div className="log-grid2">
-              <div className="log-field"><label>Zieldatum</label><input className="log-input" type="date" value={goal.targetDate} onChange={e=>sg('targetDate')(e.target.value)} min={new Date().toISOString().slice(0,10)}/></div>
-              <div className="log-field"><label>Zieldistanz (km)</label><input className="log-input" type="number" min="20" value={goal.distanceKm} onChange={e=>sg('distanceKm')(e.target.value)} placeholder="z. B. 200"/></div>
-              <div className="log-field"><label>Zielschnitt (km/h)</label><input className="log-input" type="number" min="10" max="50" step="0.5" value={goal.targetSpeedKmh} onChange={e=>sg('targetSpeedKmh')(e.target.value)} placeholder="z. B. 26"/></div>
-            </div>
-            {ok2&&raceHrs>0&&(
-              <div style={{background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#a5b4fc',marginBottom:14}}>
-                Geschätzte Renndauer: {Math.floor(raceHrs)}h {Math.round((raceHrs%1)*60)}min &nbsp;·&nbsp; Plan: {Math.max(4,Math.round((new Date(goal.targetDate)-new Date())/604800000))} Wochen
-              </div>
-            )}
-            <div style={{display:'flex',gap:8}}>
-              <button className="btn-sm" onClick={()=>setStep(1)}>← Zurück</button>
-              <button className="btn-primary indigo" style={{flex:1}} disabled={!ok2}
-                onClick={()=>onCreate(
-                  {age:+profile.age,weight:+profile.weight,fitnessLevel:profile.fitnessLevel,weeklyKm:+profile.weeklyKm||0,ftp:+profile.ftp||null},
-                  {eventName:goal.eventName,targetDate:goal.targetDate,distanceKm:+goal.distanceKm,targetSpeedKmh:+goal.targetSpeedKmh}
-                )}>🏋️ Trainingsplan erstellen</button>
-            </div>
-          </>
-        )}
+        <button className="btn-primary indigo" disabled={!ok}
+          onClick={()=>onCreate(
+            {age:+(profile.age)||30,weight:+(profile.weight)||75,fitnessLevel:profile.fitnessLevel||'intermediate',weeklyKm:+(profile.weeklyKm)||0,ftp:+(profile.ftp)||null},
+            {eventName:goal.eventName,targetDate:goal.targetDate,distanceKm:+goal.distanceKm,targetSpeedKmh:+goal.targetSpeedKmh}
+          )}>🏋️ Trainingsplan erstellen</button>
       </div>
     );
   }
@@ -1029,8 +1045,8 @@
   }
 
   // ── Trainer: Panel wrapper ────────────────────────────────────────────────
-  function TrainerPanel({plan,logs,onCreatePlan,onLogSession,onDeletePlan}){
-    if(!plan)return <TrainerSetup onCreate={onCreatePlan}/>;
+  function TrainerPanel({plan,logs,onCreatePlan,onLogSession,onDeletePlan,profile}){
+    if(!plan)return <TrainerSetup onCreate={onCreatePlan} profile={profile}/>;
     return <TrainerPlanView plan={plan} logs={logs} onLog={onLogSession} onDeletePlan={onDeletePlan}/>;
   }
 
@@ -1039,7 +1055,7 @@
     // shared
     const [apiKey,setApiKey]=useState('');
     const [planMode,setPlanMode]=useState('roundtrip'); // 'roundtrip'|'manual'
-    const [profile,setProfile]=useState({name:'Fahrer',speed:25});
+    const [profile,setProfile]=useState({name:'Fahrer',speed:25,age:'',weight:'',fitnessLevel:'intermediate',weeklyKm:'',ftp:''});
     const [savedTours,setSavedTours]=useState([]);
     const [activeTab,setActiveTab]=useState('routes');
 
@@ -1122,13 +1138,31 @@
     },[recalcManual,manPref,manLoop]);
 
     // ── Trainer callbacks ──
-    const createTrainingPlan=useCallback((profile,goal)=>{
-      setTrainingPlan(generateTrainingPlan(profile,goal));
+    const createTrainingPlan=useCallback((prof,goal)=>{
+      setTrainingPlan(generateTrainingPlan(prof,goal));
       setTrainingLogs({});
       setActiveTab('trainer');
     },[]);
     const logTrainingSession=useCallback((id,log)=>setTrainingLogs(l=>({...l,[id]:log})),[]);
     const deleteTrainingPlan=useCallback(()=>{setTrainingPlan(null);setTrainingLogs({});},[]);
+
+    // ── Backup ──
+    const exportBackup=useCallback(()=>{
+      const data={version:1,exportedAt:new Date().toISOString(),apiKey,profile,savedTours,trainingPlan,trainingLogs};
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download=`rennrad-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
+      URL.revokeObjectURL(url);
+    },[apiKey,profile,savedTours,trainingPlan,trainingLogs]);
+    const importBackup=useCallback((data)=>{
+      if(!data||data.version!==1){alert('Unbekanntes Backup-Format (version ≠ 1).');return;}
+      if(data.apiKey!==undefined)setApiKey(data.apiKey);
+      if(data.profile)setProfile(p=>({...p,...data.profile}));
+      if(data.savedTours)setSavedTours(data.savedTours);
+      if(data.trainingPlan)setTrainingPlan(data.trainingPlan);
+      if(data.trainingLogs)setTrainingLogs(data.trainingLogs);
+    },[]);
 
     return(
       <>
@@ -1300,11 +1334,11 @@
           )}
 
           {activeTab==='trainer'&&(
-            <TrainerPanel plan={trainingPlan} logs={trainingLogs}
+            <TrainerPanel plan={trainingPlan} logs={trainingLogs} profile={profile}
               onCreatePlan={createTrainingPlan} onLogSession={logTrainingSession} onDeletePlan={deleteTrainingPlan}/>
           )}
 
-          {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile}/>}
+          {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile} onExport={exportBackup} onImport={importBackup}/>}
         </main>
       </>
     );
