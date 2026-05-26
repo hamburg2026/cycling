@@ -272,6 +272,8 @@
     .drop-zone:hover,.drop-zone.over { border-color:#6366f1; background:rgba(99,102,241,0.06); }
     .drop-zone-icon { font-size:32px; margin-bottom:6px; }
     .drop-zone-text { font-size:12px; color:#64748b; line-height:1.6; }
+    .link-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:2px 7px; border-radius:10px; background:rgba(99,102,241,0.12); color:#a5b4fc; border:1px solid rgba(99,102,241,0.25); }
+    .linked-card { background:#0f172a; border:1px solid rgba(99,102,241,0.3); border-radius:9px; padding:12px; margin-bottom:12px; }
 
     @media (max-width: 768px) {
       #root { flex-direction: column; }
@@ -1013,6 +1015,7 @@
   function SessionLogModal({session,week,existing,onSave,onSkip,onClose}){
     const meta=SESSION_META[session.type]||SESSION_META.ga1;
     const isRest=session.type==='rest';
+    const isLinked=existing?.linkedActivityId;
     const initDist=existing?existing.distanceKm:(isRest?'':session.distanceKm||'');
     const [form,setForm]=useState(existing||{distanceKm:initDist,avgSpeed:'',avgHR:'',maxHR:'',elevationM:'',rpe:0,notes:''});
     const set=k=>v=>setForm(f=>({...f,[k]:v}));
@@ -1039,40 +1042,57 @@
           </div>
           <div className="log-modal-body">
             <div className="desc-box" style={{borderLeftColor:meta.color}}>{session.description}</div>
-            {isRest&&(
-              <div style={{fontSize:12,color:'#64748b',marginBottom:10,padding:'8px 10px',background:'rgba(100,116,139,0.1)',borderRadius:7,border:'1px solid #334155'}}>
-                Plan: Ruhetag — alle Felder optional. Dennoch aktiv gewesen?
+            {isLinked?(
+              <div className="linked-card">
+                <div style={{fontSize:11,fontWeight:600,color:'#a5b4fc',marginBottom:8}}>🔗 Verknüpfte Aktivität</div>
+                <div style={{fontSize:13,color:'#e2e8f0',marginBottom:4}}>{existing.notes?.replace(/^(Aus Aktivität|Auto): /,'') || 'Aktivität'}</div>
+                <div style={{display:'flex',gap:10,flexWrap:'wrap',fontSize:12,color:'#94a3b8'}}>
+                  {existing.distanceKm&&<span>📏 {existing.distanceKm} km</span>}
+                  {existing.avgSpeed&&<span>⚡ {existing.avgSpeed} km/h</span>}
+                  {existing.avgHR&&<span>❤️ {existing.avgHR} bpm</span>}
+                  {existing.elevationM&&<span>⛰️ {existing.elevationM} m</span>}
+                </div>
+                <button className="btn-sm" style={{marginTop:10,color:'#f87171',borderColor:'rgba(239,68,68,0.3)',fontSize:11}}
+                  onClick={()=>onSave(null)}>🔓 Verknüpfung aufheben</button>
               </div>
+            ):(
+              <>
+                {isRest&&(
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:10,padding:'8px 10px',background:'rgba(100,116,139,0.1)',borderRadius:7,border:'1px solid #334155'}}>
+                    Plan: Ruhetag — alle Felder optional. Dennoch aktiv gewesen?
+                  </div>
+                )}
+                <div className="log-grid2">
+                  <div className="log-field"><label>Distanz (km)</label><input className="log-input" type="number" step="0.1" min="0" value={form.distanceKm} onChange={e=>set('distanceKm')(e.target.value)} placeholder={isRest?'0 (Ruhetag)':`Ziel: ${session.distanceKm} km`}/></div>
+                  <div className="log-field"><label>Ø Geschwindigkeit (km/h)</label><input className="log-input" type="number" step="0.1" min="0" value={form.avgSpeed} onChange={e=>set('avgSpeed')(e.target.value)}/></div>
+                  <div className="log-field"><label>Ø Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.avgHR} onChange={e=>set('avgHR')(e.target.value)}/></div>
+                  <div className="log-field"><label>Max Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.maxHR} onChange={e=>set('maxHR')(e.target.value)}/></div>
+                  <div className="log-field"><label>Höhenmeter (m)</label><input className="log-input" type="number" min="0" value={form.elevationM} onChange={e=>set('elevationM')(e.target.value)}/></div>
+                </div>
+                <div className="log-field">
+                  <label>Wahrgenommene Anstrengung (RPE 1–10)</label>
+                  <div className="rpe-row">
+                    {[1,2,3,4,5,6,7,8,9,10].map(n=>(
+                      <button key={n} className={`rpe-btn ${form.rpe===n?'active':''}`}
+                        style={form.rpe===n?{background:rpeColor(n),borderColor:rpeColor(n),color:'#fff'}:{}}
+                        onClick={()=>set('rpe')(n)}>{n}</button>
+                    ))}
+                  </div>
+                  <div style={{fontSize:10,color:'#475569',marginTop:3}}>1–3 leicht · 4–6 mittel · 7–8 hart · 9–10 maximal</div>
+                </div>
+                <div className="log-field">
+                  <label>Notizen</label>
+                  <textarea className="log-input" rows={3} value={form.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Wie war die Einheit? Besonderheiten?" style={{resize:'vertical'}}/>
+                </div>
+              </>
             )}
-            <div className="log-grid2">
-              <div className="log-field"><label>Distanz (km)</label><input className="log-input" type="number" step="0.1" min="0" value={form.distanceKm} onChange={e=>set('distanceKm')(e.target.value)} placeholder={isRest?'0 (Ruhetag)':`Ziel: ${session.distanceKm} km`}/></div>
-              <div className="log-field"><label>Ø Geschwindigkeit (km/h)</label><input className="log-input" type="number" step="0.1" min="0" value={form.avgSpeed} onChange={e=>set('avgSpeed')(e.target.value)}/></div>
-              <div className="log-field"><label>Ø Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.avgHR} onChange={e=>set('avgHR')(e.target.value)}/></div>
-              <div className="log-field"><label>Max Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={form.maxHR} onChange={e=>set('maxHR')(e.target.value)}/></div>
-              <div className="log-field"><label>Höhenmeter (m)</label><input className="log-input" type="number" min="0" value={form.elevationM} onChange={e=>set('elevationM')(e.target.value)}/></div>
-            </div>
-            <div className="log-field">
-              <label>Wahrgenommene Anstrengung (RPE 1–10)</label>
-              <div className="rpe-row">
-                {[1,2,3,4,5,6,7,8,9,10].map(n=>(
-                  <button key={n} className={`rpe-btn ${form.rpe===n?'active':''}`}
-                    style={form.rpe===n?{background:rpeColor(n),borderColor:rpeColor(n),color:'#fff'}:{}}
-                    onClick={()=>set('rpe')(n)}>{n}</button>
-                ))}
-              </div>
-              <div style={{fontSize:10,color:'#475569',marginTop:3}}>1–3 leicht · 4–6 mittel · 7–8 hart · 9–10 maximal</div>
-            </div>
-            <div className="log-field">
-              <label>Notizen</label>
-              <textarea className="log-input" rows={3} value={form.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Wie war die Einheit? Besonderheiten?" style={{resize:'vertical'}}/>
-            </div>
           </div>
           <div className="log-modal-footer">
-            <button className="btn-sm" style={{color:'#f87171',borderColor:'rgba(239,68,68,0.3)'}} onClick={onSkip}>⏭️ Überspringen</button>
+            {!isLinked&&<button className="btn-sm" style={{color:'#f87171',borderColor:'rgba(239,68,68,0.3)'}} onClick={onSkip}>⏭️ Überspringen</button>}
             <div style={{flex:1}}/>
-            {isRest
-              ?<button className="btn-sm hi" onClick={()=>onSave({...form,skipped:false})}>✅ Ruhetag bestätigen</button>
-              :<button className="btn-sm hi" onClick={()=>onSave({...form,skipped:false})}>💾 Einheit speichern</button>
+            {isLinked
+              ?<button className="btn-sm" onClick={onClose}>Schließen</button>
+              :<button className="btn-sm hi" onClick={()=>onSave({...form,skipped:false})}>{isRest?'✅ Ruhetag bestätigen':'💾 Einheit speichern'}</button>
             }
           </div>
         </div>
@@ -1387,7 +1407,10 @@
 
         {modal&&(
           <SessionLogModal session={modal.session} week={modal.week} existing={logs[modal.session.id]||null}
-            onSave={lg=>{onLog(modal.session.id,lg);setModal(null);}}
+            onSave={lg=>{
+              if(lg===null){onLog(modal.session.id,undefined);setModal(null);}
+              else{onLog(modal.session.id,lg);setModal(null);}
+            }}
             onSkip={()=>{onLog(modal.session.id,{skipped:true});setModal(null);}}
             onClose={()=>setModal(null)}/>
         )}
@@ -1586,12 +1609,106 @@
     );
   }
 
+  // ── Auto-link helper ─────────────────────────────────────────────────────
+  function linkActivityToSession(activity, plan) {
+    if (!plan) return null;
+    for (const week of plan.weeks) {
+      for (const sess of week.sessions) {
+        if (sess.date === activity.date) return { sess, week };
+      }
+    }
+    return null;
+  }
+
+  // ── Activity Tab ──────────────────────────────────────────────────────────
+  function ActivityTab({activities, trainingPlan, trainingLogs, onAddActivities, onDeleteActivity, onUpdateTrainingLog}) {
+    const [manModal, setManModal] = useState(false);
+    const [range, setRange] = useState(9999);
+    const cutoff = new Date(Date.now()-range*86400000).toISOString().slice(0,10);
+    const filtered = [...activities].filter(a=>a.date>=cutoff&&isRideType(a.type)).sort((a,b)=>b.date.localeCompare(a.date));
+    const typeIcon = t => /virtual/i.test(t)?'🖥️':/mountain|mtb/i.test(t)?'🏔️':/gravel/i.test(t)?'🪨':'🚴';
+
+    return (
+      <div>
+        <ImportSection onAdd={onAddActivities}/>
+
+        {/* Activity list */}
+        <div className="chart-card">
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+            <div style={{flex:1,fontSize:13,fontWeight:600,color:'#f8fafc'}}>🚴 Aktivitäten ({activities.length})</div>
+            <button className="btn-sm hi" onClick={()=>setManModal(true)}>➕ Manuell erfassen</button>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+            <span style={{fontSize:12,color:'#64748b'}}>Zeitraum:</span>
+            {[{v:30,l:'30T'},{v:90,l:'3M'},{v:180,l:'6M'},{v:365,l:'1J'},{v:9999,l:'Alles'}].map(({v,l})=>(
+              <button key={v} className={`chart-btn ${range===v?'active':''}`} onClick={()=>setRange(v)}>{l}</button>
+            ))}
+            <span style={{marginLeft:'auto',fontSize:11,color:'#475569'}}>{filtered.length} Radfahrten</span>
+          </div>
+          {filtered.length===0?(
+            <div style={{color:'#475569',fontSize:12,textAlign:'center',padding:20}}>Noch keine Aktivitäten.<br/>Importiere Strava-Daten oder erfasse Fahrten manuell.</div>
+          ):(
+            <div style={{maxHeight:520,overflowY:'auto'}}>
+              {filtered.map(a=>{
+                const linked = linkActivityToSession(a, trainingPlan);
+                const sess = linked?.sess;
+                const week = linked?.week;
+                const log = sess ? trainingLogs[sess.id] : null;
+                const isLinked = log && log.linkedActivityId === a.id;
+                const isLogged = log && !log.skipped;
+                const sessLabel = sess ? `W${week.weekNumber} · ${sess.dayShort} · ${(SESSION_META[sess.type]||SESSION_META.ga1).label}` : null;
+                return (
+                  <div key={a.id} className="act-row" style={{flexWrap:'wrap',gap:8}}>
+                    <div className="act-icon">{typeIcon(a.type)}</div>
+                    <div style={{minWidth:0,flex:1}}>
+                      <div className="act-name" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:200}}>{a.name}</div>
+                      <div className="act-date">{a.date} · {a.source==='strava_csv'?'Strava':a.source==='gpx'?'GPX':'Manuell'}</div>
+                    </div>
+                    <div className="act-pills">
+                      {a.distanceKm>0&&<span className="act-pill hi">{a.distanceKm} km</span>}
+                      {a.avgSpeedKmh&&<span className="act-pill">{a.avgSpeedKmh} km/h</span>}
+                      {a.movingTimeSec&&<span className="act-pill">{secToHHMM(a.movingTimeSec)}</span>}
+                      {a.avgHR&&<span className="act-pill">❤️ {a.avgHR}</span>}
+                      {a.elevationGainM&&<span className="act-pill">⛰️ {Math.round(a.elevationGainM)}m</span>}
+                    </div>
+                    {sessLabel&&(
+                      <div style={{display:'flex',alignItems:'center',gap:6,width:'100%',paddingLeft:42}}>
+                        <span className="link-badge">🔗 {sessLabel}</span>
+                        {isLinked?(
+                          <span style={{fontSize:10,color:'#64748b'}}>✓ Angerechnet</span>
+                        ):(!isLogged&&(
+                          <button className="btn-sm" style={{fontSize:10,padding:'2px 8px',background:'rgba(34,197,94,0.12)',borderColor:'rgba(34,197,94,0.3)',color:'#4ade80'}}
+                            onClick={()=>onUpdateTrainingLog(sess.id,{
+                              distanceKm:a.distanceKm,
+                              avgSpeed:a.avgSpeedKmh,
+                              avgHR:a.avgHR,
+                              maxHR:a.maxHR,
+                              elevationM:a.elevationGainM,
+                              rpe:0,
+                              notes:`Aus Aktivität: ${a.name}`,
+                              skipped:false,
+                              linkedActivityId:a.id,
+                            })}>Anrechnen ✓</button>
+                        ))}
+                      </div>
+                    )}
+                    <button onClick={()=>onDeleteActivity(a.id)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {manModal&&<ManualEntryModal onSave={a=>{onAddActivities([a]);setManModal(false);}} onClose={()=>setManModal(false)}/>}
+      </div>
+    );
+  }
+
   // ── Analytics Panel ───────────────────────────────────────────────────────
-  function AnalyticsPanel({activities,trainingPlan,onAddActivities,onDeleteActivity}){
+  function AnalyticsPanel({activities, trainingPlan, trainingLogs}){
     const [range,setRange]=useState(90);
     const [metric,setMetric]=useState('avgSpeedKmh');
-    const [manModal,setManModal]=useState(false);
-    const [showImport,setShowImport]=useState(true);
     const cutoff=new Date(Date.now()-range*86400000).toISOString().slice(0,10);
     const filtered=[...activities].filter(a=>a.date>=cutoff&&isRideType(a.type)).sort((a,b)=>b.date.localeCompare(a.date));
     const totalKm=filtered.reduce((s,a)=>s+a.distanceKm,0);
@@ -1609,11 +1726,9 @@
       {id:'avgCadence',    label:'🔄 Kadenz',    unit:'rpm',   color:'#8b5cf6'},
     ];
     const selM=METRICS.find(m=>m.id===metric)||METRICS[0];
-    const typeIcon=t=>/virtual/i.test(t)?'🖥️':/mountain|mtb/i.test(t)?'🏔️':/gravel/i.test(t)?'🪨':'🚴';
     return(
       <div>
-        {showImport&&<ImportSection onAdd={acts=>{onAddActivities(acts);if(acts.length)setShowImport(false);}}/>}
-        {!showImport&&<button className="btn-sm" style={{marginBottom:14}} onClick={()=>setShowImport(true)}>📥 Importieren / weitere Dateien</button>}
+        <div style={{fontSize:11,color:'#475569',marginBottom:10}}>Aktivitäten erfassen und verwalten → Tab 🚴 Aktivitäten</div>
 
         {/* Range filter */}
         <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14,flexWrap:'wrap'}}>
@@ -1651,40 +1766,6 @@
           </div>
           <TrendChart activities={filtered} metric={metric} color={selM.color}/>
         </div>
-
-        {/* Activity list */}
-        <div className="chart-card">
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-            <div style={{flex:1,fontSize:13,fontWeight:600,color:'#f8fafc'}}>Aktivitäten</div>
-            <button className="btn-sm hi" onClick={()=>setManModal(true)}>➕ Manuell erfassen</button>
-          </div>
-          {filtered.length===0?(
-            <div style={{color:'#475569',fontSize:12,textAlign:'center',padding:20}}>Noch keine Aktivitäten im gewählten Zeitraum.<br/>Importiere Strava-Daten oder erfasse Fahrten manuell.</div>
-          ):(
-            <div style={{maxHeight:420,overflowY:'auto'}}>
-              {filtered.map(a=>(
-                <div key={a.id} className="act-row">
-                  <div className="act-icon">{typeIcon(a.type)}</div>
-                  <div style={{minWidth:0}}>
-                    <div className="act-name" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:180}}>{a.name}</div>
-                    <div className="act-date">{a.date} · {a.source==='strava_csv'?'Strava':a.source==='gpx'?'GPX':'Manuell'}</div>
-                  </div>
-                  <div className="act-pills">
-                    {a.distanceKm>0&&<span className="act-pill hi">{a.distanceKm} km</span>}
-                    {a.avgSpeedKmh&&<span className="act-pill">{a.avgSpeedKmh} km/h</span>}
-                    {a.movingTimeSec&&<span className="act-pill">{secToHHMM(a.movingTimeSec)}</span>}
-                    {a.avgHR&&<span className="act-pill">❤️ {a.avgHR}</span>}
-                    {a.elevationGainM&&<span className="act-pill">⛰️ {Math.round(a.elevationGainM)}m</span>}
-                    {a.avgWatts&&<span className="act-pill">💪 {a.avgWatts}W</span>}
-                  </div>
-                  <button onClick={()=>onDeleteActivity(a.id)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {manModal&&<ManualEntryModal onSave={a=>{onAddActivities([a]);setManModal(false);}} onClose={()=>setManModal(false)}/>}
       </div>
     );
   }
@@ -1783,7 +1864,7 @@
       setTrainingLogs({});
       setActiveTab('trainer');
     },[]);
-    const logTrainingSession=useCallback((id,log)=>setTrainingLogs(l=>({...l,[id]:log})),[]);
+    const logTrainingSession=useCallback((id,log)=>setTrainingLogs(l=>{if(log===undefined){const n={...l};delete n[id];return n;}return{...l,[id]:log};}),[]);
     const deleteTrainingPlan=useCallback(()=>{setTrainingPlan(null);setTrainingLogs({});},[]);
 
     // ── Backup ──
@@ -1933,7 +2014,8 @@
             <button className={`tab ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>🗺️ Routen{planMode==='roundtrip'&&rtRoutes.length>0?` (${rtRoutes.length})`:planMode==='manual'&&manRoute?' (1)':''}</button>
             <button className={`tab ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>💾 Gespeichert{savedTours.length>0?` (${savedTours.length})`:''}</button>
             <button className={`tab ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>🏋️ Trainer{trainingPlan?' ✓':''}</button>
-            <button className={`tab ${activeTab==='analytics'?'active':''}`} onClick={()=>setActiveTab('analytics')}>📊 Auswertung{activities.length>0?` (${activities.length})`:''}</button>
+            <button className={`tab ${activeTab==='analytics'?'active':''}`} onClick={()=>setActiveTab('analytics')}>📊 Auswertung</button>
+            <button className={`tab ${activeTab==='activities'?'active':''}`} onClick={()=>setActiveTab('activities')}>🚴 Aktivitäten{activities.length>0?` (${activities.length})`:''}</button>
             <button className={`tab ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>👤 Profil</button>
           </div>
 
@@ -1982,16 +2064,47 @@
 
           {activeTab==='analytics'&&(
             <div style={{padding:'16px'}}>
-              <AnalyticsPanel
+              <AnalyticsPanel activities={activities} trainingPlan={trainingPlan} trainingLogs={trainingLogs}/>
+            </div>
+          )}
+
+          {activeTab==='activities'&&(
+            <div style={{padding:'16px'}}>
+              <ActivityTab
                 activities={activities}
                 trainingPlan={trainingPlan}
+                trainingLogs={trainingLogs}
                 onAddActivities={newActs=>{
                   setActivities(prev=>{
                     const ids=new Set(prev.map(a=>a.id));
                     return [...prev,...newActs.filter(a=>!ids.has(a.id))].sort((a,b)=>b.date.localeCompare(a.date));
                   });
+                  // Auto-link to training plan
+                  if(trainingPlan){
+                    newActs.forEach(act=>{
+                      const result=linkActivityToSession(act,trainingPlan);
+                      if(result){
+                        const {sess}=result;
+                        setTrainingLogs(prev=>{
+                          if(prev[sess.id])return prev;
+                          return {...prev,[sess.id]:{
+                            distanceKm:act.distanceKm,
+                            avgSpeed:act.avgSpeedKmh,
+                            avgHR:act.avgHR,
+                            maxHR:act.maxHR,
+                            elevationM:act.elevationGainM,
+                            rpe:0,
+                            notes:`Auto: ${act.name}`,
+                            skipped:false,
+                            linkedActivityId:act.id,
+                          }};
+                        });
+                      }
+                    });
+                  }
                 }}
                 onDeleteActivity={id=>setActivities(prev=>prev.filter(a=>a.id!==id))}
+                onUpdateTrainingLog={logTrainingSession}
               />
             </div>
           )}
