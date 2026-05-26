@@ -240,10 +240,36 @@
     .rpe-btn.active { border-color:transparent; color:#fff; }
     .desc-box { background:#0f172a; border-radius:8px; padding:10px 12px; font-size:12px; color:#64748b; line-height:1.6; margin-bottom:14px; border-left:3px solid; }
 
+    /* ── Analytics / Auswertung ── */
+    .ana-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
+    .ana-stat { background:#1e293b; border:1px solid #334155; border-radius:11px; padding:14px; text-align:center; }
+    .ana-stat-val { font-size:22px; font-weight:700; color:#f8fafc; line-height:1; margin-bottom:3px; }
+    .ana-stat-lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; }
+    .chart-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:14px; }
+    .chart-title { font-size:13px; font-weight:600; color:#f8fafc; margin-bottom:3px; }
+    .chart-sub { font-size:11px; color:#64748b; margin-bottom:10px; }
+    .chart-controls { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; }
+    .chart-btn { padding:4px 10px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#64748b; font-size:11px; cursor:pointer; transition:all 0.15s; }
+    .chart-btn.active { background:rgba(99,102,241,0.15); border-color:#6366f1; color:#a5b4fc; }
+    .act-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #0f172a; }
+    .act-row:last-child { border-bottom:none; }
+    .act-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; background:#0f172a; }
+    .act-name { font-size:12px; font-weight:600; color:#e2e8f0; }
+    .act-date { font-size:10px; color:#475569; }
+    .act-pills { display:flex; gap:5px; flex-wrap:wrap; margin-left:auto; }
+    .act-pill { font-size:10px; color:#64748b; background:#0f172a; padding:2px 7px; border-radius:10px; white-space:nowrap; }
+    .act-pill.hi { color:#93c5fd; }
+    .import-box { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:14px; margin-bottom:16px; }
+    .drop-zone { border:2px dashed #334155; border-radius:10px; padding:22px; text-align:center; cursor:pointer; transition:all 0.2s; }
+    .drop-zone:hover,.drop-zone.over { border-color:#6366f1; background:rgba(99,102,241,0.06); }
+    .drop-zone-icon { font-size:32px; margin-bottom:6px; }
+    .drop-zone-text { font-size:12px; color:#64748b; line-height:1.6; }
+
     @media (max-width: 768px) {
       #root { flex-direction: column; }
       .sidebar { width: 100%; min-width: unset; height: auto; position: relative; }
       .route-stats { grid-template-columns: repeat(2,1fr); }
+      .ana-stats { grid-template-columns: repeat(2,1fr); }
     }
   </style>
 </head>
@@ -293,6 +319,98 @@
   async function reverseGeocode(lon,lat){
     try{const r=await fetch(`${NOMINATIM_BASE}/reverse?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&format=json&zoom=16`,{headers:{'Accept-Language':'de'}});const d=await r.json();if(d.error)return`${lat.toFixed(4)}, ${lon.toFixed(4)}`;const a=d.address||{};return[a.road||a.pedestrian||a.path||a.suburb,a.city||a.town||a.village||a.county].filter(Boolean).join(', ')||`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}
     catch{return`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}
+  }
+
+  // ── Activity parsing helpers ──────────────────────────────────────────────
+  function isRideType(t){return /ride|cycling|velo|rad|bike/i.test(t||'Ride');}
+  function secToHHMM(s){if(!s)return'–';const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h>0?`${h}h ${m}m`:`${m}m`;}
+  function csvLine(line){
+    const res=[];let inQ=false,cur='';
+    for(const c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){res.push(cur.replace(/^"|"$/g,'').trim());cur='';}else cur+=c;}
+    res.push(cur.replace(/^"|"$/g,'').trim());return res;
+  }
+  function haversineM(la1,lo1,la2,lo2){
+    const R=6371000,r=Math.PI/180,dLa=(la2-la1)*r,dLo=(lo2-lo1)*r;
+    const a=Math.sin(dLa/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dLo/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  function parseStravaCsv(text){
+    const lines=text.trim().split('\n');if(lines.length<2)return[];
+    const headers=csvLine(lines[0]);
+    const col=name=>headers.findIndex(h=>h.toLowerCase().replace(/\W/g,'').includes(name.toLowerCase().replace(/\W/g,'')));
+    const C={id:col('activityid'),date:col('activitydate'),name:col('activityname'),type:col('activitytype'),
+      elapsed:col('elapsedtime'),moving:col('movingtime'),dist:col('distance'),
+      maxHR:col('maxheartrate'),avgHR:col('averageheartrate'),
+      maxSpd:col('maxspeed'),avgSpd:col('averagespeed'),
+      elevG:col('elevationgain'),elevL:col('elevationloss'),
+      cadAvg:col('averagecadence'),power:col('weightedaveragepower'),
+      cal:col('calories'),effort:col('relativeeffort')};
+    const out=[];
+    for(const line of lines.slice(1)){
+      if(!line.trim())continue;
+      const v=csvLine(line);
+      const g=i=>(i>=0&&i<v.length)?v[i]:'';
+      const n=i=>{const x=parseFloat(g(i));return isNaN(x)||x===0?null:x;};
+      let date='';
+      try{const d=new Date(g(C.date));if(!isNaN(d))date=d.toISOString().slice(0,10);}catch{}
+      if(!date)continue;
+      const distM=parseFloat(g(C.dist))||0;
+      const spdMs=n(C.avgSpd);
+      const movSec=n(C.moving)||n(C.elapsed);
+      out.push({
+        id:g(C.id)||`csv_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+        source:'strava_csv',date,name:g(C.name)||'Aktivität',type:g(C.type)||'Ride',
+        distanceKm:Math.round(distM/10)/100,
+        movingTimeSec:n(C.moving),elapsedTimeSec:n(C.elapsed),
+        avgSpeedKmh:spdMs?Math.round(spdMs*3.6*10)/10:(distM&&movSec?Math.round(distM/movSec*3.6*10)/10:null),
+        maxSpeedKmh:n(C.maxSpd)?Math.round(n(C.maxSpd)*3.6*10)/10:null,
+        elevationGainM:n(C.elevG),elevationLossM:n(C.elevL),
+        avgHR:n(C.avgHR),maxHR:n(C.maxHR),avgCadence:n(C.cadAvg),
+        avgWatts:n(C.power),calories:n(C.cal),relativeEffort:n(C.effort),
+        coords:null,notes:'',
+      });
+    }
+    return out;
+  }
+  function parseGpxFile(text){
+    try{
+      const doc=new DOMParser().parseFromString(text,'text/xml');
+      const name=doc.querySelector('name')?.textContent||'GPX-Aktivität';
+      const pts=doc.querySelectorAll('trkpt');
+      if(!pts.length)return null;
+      const coords=[],hrs=[],cads=[],watts=[],times=[];
+      pts.forEach(pt=>{
+        const lat=parseFloat(pt.getAttribute('lat')),lon=parseFloat(pt.getAttribute('lon'));
+        const ele=parseFloat(pt.querySelector('ele')?.textContent||'0');
+        if(!isNaN(lat)&&!isNaN(lon))coords.push([lon,lat,isNaN(ele)?0:ele]);
+        const t=pt.querySelector('time');
+        try{if(t)times.push(new Date(t.textContent));}catch{}
+        // HR — several namespace variants
+        const hr=pt.querySelector('hr')||pt.querySelector('heartrate')||pt.querySelector('[tagName=gpxtpx\\:hr]');
+        const hrEl=pt.querySelector('extensions')?.querySelector('hr')||pt.querySelector('extensions')?.querySelector('heartrate');
+        const hrV=parseInt((hr||hrEl)?.textContent||'');if(!isNaN(hrV)&&hrV>0)hrs.push(hrV);
+        const cadEl=pt.querySelector('cad')||pt.querySelector('cadence')||pt.querySelector('extensions')?.querySelector('cad');
+        const cadV=parseInt(cadEl?.textContent||'');if(!isNaN(cadV)&&cadV>0)cads.push(cadV);
+        const wEl=pt.querySelector('watts')||pt.querySelector('power')||pt.querySelector('extensions')?.querySelector('watts');
+        const wV=parseInt(wEl?.textContent||'');if(!isNaN(wV)&&wV>0)watts.push(wV);
+      });
+      let distM=0;
+      for(let i=1;i<coords.length;i++)distM+=haversineM(coords[i-1][1],coords[i-1][0],coords[i][1],coords[i][0]);
+      let elevG=0;
+      for(let i=1;i<coords.length;i++){const d=coords[i][2]-coords[i-1][2];if(d>0)elevG+=d;}
+      const totalSec=times.length>1?(times[times.length-1]-times[0])/1000:0;
+      const avg=a=>a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):null;
+      const date=times.length?times[0].toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+      const thin=coords.length>300?coords.filter((_,i)=>i%Math.floor(coords.length/300)===0):coords;
+      return{id:`gpx_${Date.now()}`,source:'gpx',date,name,type:'Ride',
+        distanceKm:Math.round(distM/10)/100,
+        movingTimeSec:totalSec||null,elapsedTimeSec:totalSec||null,
+        avgSpeedKmh:totalSec&&distM?Math.round(distM/totalSec*3.6*10)/10:null,
+        maxSpeedKmh:null,elevationGainM:Math.round(elevG),elevationLossM:null,
+        avgHR:avg(hrs),maxHR:hrs.length?Math.max(...hrs):null,
+        avgCadence:avg(cads),avgWatts:avg(watts),
+        calories:null,relativeEffort:null,coords:thin,notes:''};
+    }catch{return null;}
   }
 
   // ── Training Plan ─────────────────────────────────────────────────────────
@@ -1050,6 +1168,294 @@
     return <TrainerPlanView plan={plan} logs={logs} onLog={onLogSession} onDeletePlan={onDeletePlan}/>;
   }
 
+  // ── SVG Charts ───────────────────────────────────────────────────────────
+  function PlanActualChart({planWeeks,activities}){
+    const weeks=planWeeks.slice(-16);
+    const actByWeek=weeks.map(w=>{
+      const d0=w.sessions[0]?.date,d6=w.sessions[6]?.date;
+      return activities.filter(a=>a.date>=d0&&a.date<=d6&&isRideType(a.type)).reduce((s,a)=>s+a.distanceKm,0);
+    });
+    const maxKm=Math.max(...weeks.map(w=>w.weekKm),...actByWeek,10);
+    const W=600,H=170,PL=36,PT=8,PB=28,PR=8;
+    const cW=W-PL-PR,cH=H-PT-PB;
+    const bW=Math.max(5,cW/weeks.length*0.38);
+    const xC=i=>PL+(i+0.5)*cW/weeks.length;
+    return(
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H,display:'block'}}>
+        {[0,0.25,0.5,0.75,1].map(f=>(
+          <line key={f} x1={PL} y1={PT+cH*(1-f)} x2={PL+cW} y2={PT+cH*(1-f)} stroke="#1e293b" strokeWidth={f===0?1.5:1}/>
+        ))}
+        {[0,0.5,1].map(f=>(
+          <text key={f} x={PL-4} y={PT+cH*(1-f)+3.5} textAnchor="end" fontSize={9} fill="#475569">{Math.round(maxKm*f)}</text>
+        ))}
+        {weeks.map((w,i)=>{
+          const planH=(w.weekKm/maxKm)*cH;
+          const actH=(actByWeek[i]/maxKm)*cH;
+          const achieved=actByWeek[i]>=w.weekKm*0.9;
+          const x=xC(i);
+          return(
+            <g key={i}>
+              <rect x={x-bW} y={PT+cH-planH} width={bW} height={planH} fill="#334155" rx={2} opacity={0.8}/>
+              <rect x={x} y={PT+cH-Math.max(actH,actByWeek[i]>0?2:0)} width={bW} height={Math.max(actH,actByWeek[i]>0?2:0)} fill={achieved?'#22c55e':'#3b82f6'} rx={2}/>
+              {i%2===0&&<text x={x} y={H-8} textAnchor="middle" fontSize={8} fill="#475569">W{w.weekNumber}</text>}
+            </g>
+          );
+        })}
+        <rect x={PL+4} y={4} width={10} height={7} fill="#334155" rx={1}/><text x={PL+17} y={10} fontSize={9} fill="#64748b">Plan</text>
+        <rect x={PL+50} y={4} width={10} height={7} fill="#3b82f6" rx={1}/><text x={PL+63} y={10} fontSize={9} fill="#64748b">Ist</text>
+        <rect x={PL+90} y={4} width={10} height={7} fill="#22c55e" rx={1}/><text x={PL+103} y={10} fontSize={9} fill="#64748b">Ziel ≥90%</text>
+        <text x={PL-4} y={10} textAnchor="end" fontSize={9} fill="#475569">km</text>
+      </svg>
+    );
+  }
+
+  function TrendChart({activities,metric,color}){
+    const pts=activities.filter(a=>a[metric]!=null&&isRideType(a.type)).sort((a,b)=>a.date.localeCompare(b.date)).slice(-60).map(a=>({x:a.date,y:+a[metric]}));
+    if(pts.length<2)return<div style={{color:'#475569',fontSize:12,textAlign:'center',padding:24}}>Nicht genug Daten für den gewählten Zeitraum.</div>;
+    const W=600,H=130,PL=38,PT=8,PB=22,PR=8;
+    const cW=W-PL-PR,cH=H-PT-PB;
+    const ys=pts.map(p=>p.y),minY=Math.min(...ys),maxY=Math.max(...ys),rng=maxY-minY||1;
+    const xi=i=>PL+(i/(pts.length-1))*cW;
+    const yv=y=>PT+(1-(y-minY)/rng)*cH;
+    // 5-point moving average
+    const ma=pts.map((_,i)=>{const w=pts.slice(Math.max(0,i-2),i+3);return w.reduce((s,p)=>s+p.y,0)/w.length;});
+    const maPts=ma.map((y,i)=>`${xi(i).toFixed(1)},${yv(y).toFixed(1)}`).join(' ');
+    const unit=({avgSpeedKmh:'km/h',distanceKm:'km',avgHR:'bpm',avgWatts:'W',elevationGainM:'m'})[metric]||'';
+    return(
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H,display:'block'}}>
+        {[0,0.5,1].map(f=>(
+          <React.Fragment key={f}>
+            <line x1={PL} y1={PT+cH*(1-f)} x2={PL+cW} y2={PT+cH*(1-f)} stroke="#1e293b" strokeWidth="1"/>
+            <text x={PL-3} y={PT+cH*(1-f)+3.5} textAnchor="end" fontSize={9} fill="#475569">{Math.round(minY+rng*f)}{unit}</text>
+          </React.Fragment>
+        ))}
+        {pts.map((p,i)=><circle key={i} cx={xi(i)} cy={yv(p.y)} r={3} fill={color} opacity={0.45}/>)}
+        <polyline points={maPts} fill="none" stroke={color} strokeWidth={2.2} strokeLinejoin="round"/>
+        {[0,Math.floor(pts.length/2),pts.length-1].filter((v,i,a)=>a.indexOf(v)===i).map(i=>(
+          <text key={i} x={xi(i)} y={H-4} textAnchor="middle" fontSize={9} fill="#475569">{pts[i].x.slice(5)}</text>
+        ))}
+      </svg>
+    );
+  }
+
+  // ── Import section ────────────────────────────────────────────────────────
+  function ImportSection({onAdd}){
+    const [msg,setMsg]=useState('');
+    const [err,setErr]=useState('');
+    const fileRef=useRef(null);
+    const process=async files=>{
+      let added=0,errs=0;
+      for(const file of files){
+        const text=await file.text();
+        if(file.name.toLowerCase().endsWith('.csv')){
+          const acts=parseStravaCsv(text);
+          if(acts.length){onAdd(acts);added+=acts.length;}
+          else errs++;
+        }else if(file.name.toLowerCase().endsWith('.gpx')){
+          const act=parseGpxFile(text);
+          if(act){onAdd([act]);added++;}
+          else errs++;
+        }else errs++;
+      }
+      if(added>0)setMsg(`✅ ${added} Aktivität${added!==1?'en':''} importiert.`);
+      if(errs>0)setErr(`⚠️ ${errs} Datei${errs!==1?'en':''} konnten nicht gelesen werden.`);
+      setTimeout(()=>{setMsg('');setErr('');},4000);
+    };
+    const onDrop=e=>{e.preventDefault();e.currentTarget.classList.remove('over');process(Array.from(e.dataTransfer.files));};
+    return(
+      <div className="import-box">
+        <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:8}}>📥 Aktivitäten importieren</div>
+        <div style={{fontSize:11,color:'#64748b',marginBottom:10,lineHeight:1.6}}>
+          Strava-Bulk-Export <code style={{background:'#0f172a',padding:'1px 5px',borderRadius:4}}>activities.csv</code> oder einzelne <code style={{background:'#0f172a',padding:'1px 5px',borderRadius:4}}>.gpx</code>-Dateien (mehrere gleichzeitig) — alles lokal, keine Verbindung zu Strava.
+        </div>
+        <div className="drop-zone" onClick={()=>fileRef.current?.click()}
+          onDragOver={e=>{e.preventDefault();e.currentTarget.classList.add('over');}}
+          onDragLeave={e=>e.currentTarget.classList.remove('over')} onDrop={onDrop}>
+          <div className="drop-zone-icon">📂</div>
+          <div className="drop-zone-text">Dateien hier ablegen oder klicken<br/><span style={{color:'#475569'}}>activities.csv · *.gpx (Strava, Garmin, Wahoo, …)</span></div>
+        </div>
+        <input ref={fileRef} type="file" accept=".csv,.gpx" multiple style={{display:'none'}} onChange={e=>{process(Array.from(e.target.files));e.target.value='';}}/>
+        {msg&&<div style={{marginTop:8,fontSize:12,color:'#4ade80'}}>{msg}</div>}
+        {err&&<div style={{marginTop:8,fontSize:12,color:'#f87171'}}>{err}</div>}
+      </div>
+    );
+  }
+
+  // ── Manual entry modal ────────────────────────────────────────────────────
+  function ManualEntryModal({onSave,onClose}){
+    const [f,setF]=useState({date:new Date().toISOString().slice(0,10),name:'Trainingsfahrt',type:'Ride',distanceKm:'',durationH:'',durationM:'',avgSpeedKmh:'',elevationGainM:'',avgHR:'',maxHR:'',avgCadence:'',avgWatts:'',calories:'',rpe:0,notes:''});
+    const ch=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+    const rpeColor=n=>n<=3?'#22c55e':n<=6?'#f59e0b':n<=8?'#f97316':'#ef4444';
+    const save=()=>{
+      if(!f.distanceKm)return;
+      const movSec=(+f.durationH*3600)+(+f.durationM*60)||null;
+      const dist=parseFloat(f.distanceKm)||0;
+      const spd=f.avgSpeedKmh?parseFloat(f.avgSpeedKmh):(movSec&&dist?Math.round(dist/movSec*3600*10)/10:null);
+      onSave({id:`man_${Date.now()}`,source:'manual',date:f.date,name:f.name||'Trainingsfahrt',type:f.type,
+        distanceKm:dist,movingTimeSec:movSec,elapsedTimeSec:movSec,avgSpeedKmh:spd,maxSpeedKmh:null,
+        elevationGainM:parseFloat(f.elevationGainM)||null,elevationLossM:null,
+        avgHR:parseFloat(f.avgHR)||null,maxHR:parseFloat(f.maxHR)||null,
+        avgCadence:parseFloat(f.avgCadence)||null,avgWatts:parseFloat(f.avgWatts)||null,
+        calories:parseFloat(f.calories)||null,relativeEffort:f.rpe||null,coords:null,notes:f.notes});
+      onClose();
+    };
+    return(
+      <div className="log-overlay" onClick={onClose}>
+        <div className="log-modal" style={{maxWidth:520}} onClick={e=>e.stopPropagation()}>
+          <div className="log-modal-header">
+            <div style={{width:42,height:42,borderRadius:10,background:'rgba(99,102,241,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>🚴</div>
+            <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:'#f8fafc'}}>Aktivität manuell erfassen</div><div style={{fontSize:11,color:'#64748b'}}>Trainingsfahrt ohne Gerät oder nachträglich eintragen</div></div>
+            <button style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18}} onClick={onClose}>✕</button>
+          </div>
+          <div className="log-modal-body">
+            <div className="log-grid2">
+              <div className="log-field"><label>Datum</label><input className="log-input" type="date" value={f.date} onChange={ch('date')}/></div>
+              <div className="log-field"><label>Typ</label>
+                <select className="log-input" value={f.type} onChange={ch('type')} style={{cursor:'pointer'}}>
+                  {['Ride','VirtualRide','MountainBikeRide','GravelRide'].map(t=><option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="log-field"><label>Name</label><input className="log-input" type="text" value={f.name} onChange={ch('name')}/></div>
+            <div className="log-grid2">
+              <div className="log-field"><label>Distanz (km) *</label><input className="log-input" type="number" step="0.1" min="0" value={f.distanceKm} onChange={ch('distanceKm')} placeholder="z. B. 85"/></div>
+              <div className="log-field"><label>Dauer</label>
+                <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                  <input className="log-input" type="number" min="0" value={f.durationH} onChange={ch('durationH')} placeholder="Std" style={{width:'50%'}}/>
+                  <input className="log-input" type="number" min="0" max="59" value={f.durationM} onChange={ch('durationM')} placeholder="Min" style={{width:'50%'}}/>
+                </div>
+              </div>
+              <div className="log-field"><label>Ø Geschwindigkeit (km/h)</label><input className="log-input" type="number" step="0.1" value={f.avgSpeedKmh} onChange={ch('avgSpeedKmh')} placeholder="auto"/></div>
+              <div className="log-field"><label>Höhenmeter (m)</label><input className="log-input" type="number" min="0" value={f.elevationGainM} onChange={ch('elevationGainM')}/></div>
+              <div className="log-field"><label>Ø Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={f.avgHR} onChange={ch('avgHR')}/></div>
+              <div className="log-field"><label>Max Herzfrequenz (bpm)</label><input className="log-input" type="number" min="0" value={f.maxHR} onChange={ch('maxHR')}/></div>
+              <div className="log-field"><label>Ø Trittfrequenz (U/min)</label><input className="log-input" type="number" min="0" value={f.avgCadence} onChange={ch('avgCadence')}/></div>
+              <div className="log-field"><label>Ø Leistung (Watt)</label><input className="log-input" type="number" min="0" value={f.avgWatts} onChange={ch('avgWatts')}/></div>
+              <div className="log-field"><label>Kalorien</label><input className="log-input" type="number" min="0" value={f.calories} onChange={ch('calories')}/></div>
+            </div>
+            <div className="log-field">
+              <label>Anstrengung RPE 1–10</label>
+              <div className="rpe-row">{[1,2,3,4,5,6,7,8,9,10].map(n=>(
+                <button key={n} className={`rpe-btn ${f.rpe===n?'active':''}`}
+                  style={f.rpe===n?{background:rpeColor(n),borderColor:rpeColor(n),color:'#fff'}:{}}
+                  onClick={()=>setF(p=>({...p,rpe:n}))}>{n}</button>
+              ))}</div>
+            </div>
+            <div className="log-field"><label>Notizen</label><textarea className="log-input" rows={2} value={f.notes} onChange={ch('notes')} style={{resize:'vertical'}}/></div>
+          </div>
+          <div className="log-modal-footer">
+            <div style={{flex:1}}/>
+            <button className="btn-sm" onClick={onClose}>Abbrechen</button>
+            <button className="btn-sm hi" onClick={save} disabled={!f.distanceKm}>💾 Speichern</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Analytics Panel ───────────────────────────────────────────────────────
+  function AnalyticsPanel({activities,trainingPlan,onAddActivities,onDeleteActivity}){
+    const [range,setRange]=useState(90);
+    const [metric,setMetric]=useState('avgSpeedKmh');
+    const [manModal,setManModal]=useState(false);
+    const [showImport,setShowImport]=useState(true);
+    const cutoff=new Date(Date.now()-range*86400000).toISOString().slice(0,10);
+    const filtered=[...activities].filter(a=>a.date>=cutoff&&isRideType(a.type)).sort((a,b)=>b.date.localeCompare(a.date));
+    const totalKm=filtered.reduce((s,a)=>s+a.distanceKm,0);
+    const withSpd=filtered.filter(a=>a.avgSpeedKmh);
+    const avgSpd=withSpd.length?withSpd.reduce((s,a)=>s+a.avgSpeedKmh,0)/withSpd.length:0;
+    const withHR=filtered.filter(a=>a.avgHR);
+    const avgHR=withHR.length?withHR.reduce((s,a)=>s+a.avgHR,0)/withHR.length:0;
+    const totalElev=filtered.reduce((s,a)=>s+(a.elevationGainM||0),0);
+    const METRICS=[
+      {id:'avgSpeedKmh',   label:'⚡ Schnitt',  unit:'km/h',  color:'#3b82f6'},
+      {id:'distanceKm',    label:'📏 Distanz',   unit:'km',    color:'#6366f1'},
+      {id:'avgHR',         label:'❤️ Herzfr.',   unit:'bpm',   color:'#ef4444'},
+      {id:'avgWatts',      label:'💪 Leistung',  unit:'W',     color:'#f59e0b'},
+      {id:'elevationGainM',label:'⛰️ Höhenmeter',unit:'m',     color:'#22c55e'},
+      {id:'avgCadence',    label:'🔄 Kadenz',    unit:'rpm',   color:'#8b5cf6'},
+    ];
+    const selM=METRICS.find(m=>m.id===metric)||METRICS[0];
+    const typeIcon=t=>/virtual/i.test(t)?'🖥️':/mountain|mtb/i.test(t)?'🏔️':/gravel/i.test(t)?'🪨':'🚴';
+    return(
+      <div>
+        {showImport&&<ImportSection onAdd={acts=>{onAddActivities(acts);if(acts.length)setShowImport(false);}}/>}
+        {!showImport&&<button className="btn-sm" style={{marginBottom:14}} onClick={()=>setShowImport(true)}>📥 Importieren / weitere Dateien</button>}
+
+        {/* Range filter */}
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+          <span style={{fontSize:12,color:'#64748b'}}>Zeitraum:</span>
+          {[{v:30,l:'30T'},{v:90,l:'3M'},{v:180,l:'6M'},{v:365,l:'1J'},{v:9999,l:'Alles'}].map(({v,l})=>(
+            <button key={v} className={`chart-btn ${range===v?'active':''}`} onClick={()=>setRange(v)}>{l}</button>
+          ))}
+          <span style={{marginLeft:'auto',fontSize:11,color:'#475569'}}>{filtered.length} Radfahrten</span>
+        </div>
+
+        {/* Stats */}
+        <div className="ana-stats">
+          <div className="ana-stat"><div className="ana-stat-val">{Math.round(totalKm)}</div><div className="ana-stat-lbl">km gesamt</div></div>
+          <div className="ana-stat"><div className="ana-stat-val">{avgSpd?avgSpd.toFixed(1):'–'}</div><div className="ana-stat-lbl">⌀ km/h</div></div>
+          <div className="ana-stat"><div className="ana-stat-val">{avgHR?Math.round(avgHR):'–'}</div><div className="ana-stat-lbl">⌀ Herzfr.</div></div>
+          <div className="ana-stat"><div className="ana-stat-val">{totalElev>0?`${Math.round(totalElev/1000)}k`:'–'}</div><div className="ana-stat-lbl">Höhenmeter</div></div>
+        </div>
+
+        {/* Plan vs Actual */}
+        {trainingPlan&&trainingPlan.weeks?.length>0&&(
+          <div className="chart-card">
+            <div className="chart-title">Plan vs. Ist — Wochenkilometer</div>
+            <div className="chart-sub">Grau = Planvorgabe · Blau = gefahren · Grün = ≥90% erfüllt</div>
+            <PlanActualChart planWeeks={trainingPlan.weeks} activities={activities}/>
+          </div>
+        )}
+
+        {/* Trend */}
+        <div className="chart-card">
+          <div className="chart-title">Leistungstrend</div>
+          <div className="chart-controls">
+            {METRICS.map(m=>(
+              <button key={m.id} className={`chart-btn ${metric===m.id?'active':''}`} style={metric===m.id?{borderColor:m.color,color:m.color,background:`${m.color}18`}:{}} onClick={()=>setMetric(m.id)}>{m.label}</button>
+            ))}
+          </div>
+          <TrendChart activities={filtered} metric={metric} color={selM.color}/>
+        </div>
+
+        {/* Activity list */}
+        <div className="chart-card">
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+            <div style={{flex:1,fontSize:13,fontWeight:600,color:'#f8fafc'}}>Aktivitäten</div>
+            <button className="btn-sm hi" onClick={()=>setManModal(true)}>➕ Manuell erfassen</button>
+          </div>
+          {filtered.length===0?(
+            <div style={{color:'#475569',fontSize:12,textAlign:'center',padding:20}}>Noch keine Aktivitäten im gewählten Zeitraum.<br/>Importiere Strava-Daten oder erfasse Fahrten manuell.</div>
+          ):(
+            <div style={{maxHeight:420,overflowY:'auto'}}>
+              {filtered.map(a=>(
+                <div key={a.id} className="act-row">
+                  <div className="act-icon">{typeIcon(a.type)}</div>
+                  <div style={{minWidth:0}}>
+                    <div className="act-name" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:180}}>{a.name}</div>
+                    <div className="act-date">{a.date} · {a.source==='strava_csv'?'Strava':a.source==='gpx'?'GPX':'Manuell'}</div>
+                  </div>
+                  <div className="act-pills">
+                    {a.distanceKm>0&&<span className="act-pill hi">{a.distanceKm} km</span>}
+                    {a.avgSpeedKmh&&<span className="act-pill">{a.avgSpeedKmh} km/h</span>}
+                    {a.movingTimeSec&&<span className="act-pill">{secToHHMM(a.movingTimeSec)}</span>}
+                    {a.avgHR&&<span className="act-pill">❤️ {a.avgHR}</span>}
+                    {a.elevationGainM&&<span className="act-pill">⛰️ {Math.round(a.elevationGainM)}m</span>}
+                    {a.avgWatts&&<span className="act-pill">💪 {a.avgWatts}W</span>}
+                  </div>
+                  <button onClick={()=>onDeleteActivity(a.id)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {manModal&&<ManualEntryModal onSave={a=>{onAddActivities([a]);setManModal(false);}} onClose={()=>setManModal(false)}/>}
+      </div>
+    );
+  }
+
   // ── App ───────────────────────────────────────────────────────────────────
   function App(){
     // shared
@@ -1079,6 +1485,7 @@
     // trainer
     const [trainingPlan,setTrainingPlan]=useState(null);
     const [trainingLogs,setTrainingLogs]=useState({});
+    const [activities,setActivities]=useState([]);
     const manWpRef=useRef([]);
     const manReqId=useRef(0);
 
@@ -1148,13 +1555,13 @@
 
     // ── Backup ──
     const exportBackup=useCallback(()=>{
-      const data={version:1,exportedAt:new Date().toISOString(),apiKey,profile,savedTours,trainingPlan,trainingLogs};
+      const data={version:1,exportedAt:new Date().toISOString(),apiKey,profile,savedTours,trainingPlan,trainingLogs,activities};
       const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
       a.href=url;a.download=`rennrad-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
       URL.revokeObjectURL(url);
-    },[apiKey,profile,savedTours,trainingPlan,trainingLogs]);
+    },[apiKey,profile,savedTours,trainingPlan,trainingLogs,activities]);
     const importBackup=useCallback((data)=>{
       if(!data||data.version!==1){alert('Unbekanntes Backup-Format (version ≠ 1).');return;}
       if(data.apiKey!==undefined)setApiKey(data.apiKey);
@@ -1162,6 +1569,7 @@
       if(data.savedTours)setSavedTours(data.savedTours);
       if(data.trainingPlan)setTrainingPlan(data.trainingPlan);
       if(data.trainingLogs)setTrainingLogs(data.trainingLogs);
+      if(data.activities)setActivities(data.activities);
     },[]);
 
     return(
@@ -1292,6 +1700,7 @@
             <button className={`tab ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>🗺️ Routen{planMode==='roundtrip'&&rtRoutes.length>0?` (${rtRoutes.length})`:planMode==='manual'&&manRoute?' (1)':''}</button>
             <button className={`tab ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>💾 Gespeichert{savedTours.length>0?` (${savedTours.length})`:''}</button>
             <button className={`tab ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>🏋️ Trainer{trainingPlan?' ✓':''}</button>
+            <button className={`tab ${activeTab==='analytics'?'active':''}`} onClick={()=>setActiveTab('analytics')}>📊 Auswertung{activities.length>0?` (${activities.length})`:''}</button>
             <button className={`tab ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>👤 Profil</button>
           </div>
 
@@ -1336,6 +1745,22 @@
           {activeTab==='trainer'&&(
             <TrainerPanel plan={trainingPlan} logs={trainingLogs} profile={profile}
               onCreatePlan={createTrainingPlan} onLogSession={logTrainingSession} onDeletePlan={deleteTrainingPlan}/>
+          )}
+
+          {activeTab==='analytics'&&(
+            <div style={{padding:'16px'}}>
+              <AnalyticsPanel
+                activities={activities}
+                trainingPlan={trainingPlan}
+                onAddActivities={newActs=>{
+                  setActivities(prev=>{
+                    const ids=new Set(prev.map(a=>a.id));
+                    return [...prev,...newActs.filter(a=>!ids.has(a.id))].sort((a,b)=>b.date.localeCompare(a.date));
+                  });
+                }}
+                onDeleteActivity={id=>setActivities(prev=>prev.filter(a=>a.id!==id))}
+              />
+            </div>
           )}
 
           {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile} onExport={exportBackup} onImport={importBackup}/>}
