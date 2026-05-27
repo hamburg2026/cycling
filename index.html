@@ -1142,8 +1142,9 @@
     else if(lastDelta>=0&&!trendImproving){trendLabel=`📊 +${absDelta} km über Plan (Tendenz: nachlassend)`;trendColor='#f59e0b';}
     else if(lastDelta<0&&trendImproving){trendLabel=`📉 ${absDelta} km unter Plan (Tendenz: aufholend)`;trendColor='#f59e0b';}
     else{trendLabel=`⚠️ ${absDelta} km unter Plan`;trendColor='#ef4444';}
-    // SVG layout
-    const VW=580,VH=200,PL=46,PT=14,PB=30,PR=14;
+    // SVG layout — VH increased to 220 to accommodate phase strip
+    const VW=580,VH=220,PL=46,PT=14,PB=46,PR=14;
+    const PHASE_STRIP_H=10;
     const cW=VW-PL-PR,cH=VH-PT-PB;
     const n=series.length;
     const allPlan=series.map(s=>s.plan);
@@ -1151,6 +1152,8 @@
     const maxY=Math.max(...allPlan,...allActual,10);
     const xOf=i=>PL+i/(Math.max(n-1,1))*cW;
     const yOf=v=>PT+cH-(v/maxY)*cH;
+    // Phase strip y position: above x-axis labels
+    const PHASE_STRIP_Y=VH-PB+16;
     // build plan line points
     const planPts=series.map((s,i)=>`${xOf(i).toFixed(1)},${yOf(s.plan).toFixed(1)}`).join(' ');
     // plan corridor polygon (±10%)
@@ -1170,10 +1173,19 @@
     // current position dot
     const curIdx=curWeekIdx>=0?curWeekIdx:doneCount-1;
     const curDot=series[curIdx]&&series[curIdx].hasActual?{x:xOf(curIdx),y:yOf(series[curIdx].actual)}:null;
-    // x-axis labels (max ~10)
+    // x-axis labels (max ~10) — moved down 16px to sit below phase strip
     const labelStep=n<=10?1:n<=20?2:Math.ceil(n/10);
     // grid km levels
     const gridKms=[0,0.25,0.5,0.75,1].map(f=>Math.round(maxY*f));
+    // Compute phase segments for embedded phase strip
+    const phaseSegs=[];
+    let curPh=null;
+    plan.weeks.forEach((w,wi)=>{
+      if(!curPh||curPh.phase!==w.phase){if(curPh)phaseSegs.push(curPh);curPh={phase:w.phase,start:wi,count:1};}
+      else curPh.count++;
+    });
+    if(curPh)phaseSegs.push(curPh);
+    const halfCol=n>1?cW/(2*(n-1)):cW/2;
     return(
       <div style={{flex:1,minWidth:0}}>
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6,flexWrap:'wrap'}}>
@@ -1196,9 +1208,9 @@
           {n>1&&<polyline points={planPts} fill="none" stroke="#64748b" strokeWidth={1.5} strokeDasharray="5 3"/>}
           {/* actual line */}
           {doneCount>1&&<polyline points={actualPts} fill="none" stroke={fillColor} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round"/>}
-          {/* vertical line at current week */}
+          {/* vertical line at current week — extends through phase strip */}
           {curWeekIdx>=0&&(
-            <line x1={xOf(curWeekIdx)} y1={PT} x2={xOf(curWeekIdx)} y2={PT+cH} stroke="#3b82f6" strokeWidth={1} strokeDasharray="3 2" opacity={0.6}/>
+            <line x1={xOf(curWeekIdx)} y1={PT} x2={xOf(curWeekIdx)} y2={PHASE_STRIP_Y+PHASE_STRIP_H} stroke="#3b82f6" strokeWidth={1} strokeDasharray="3 2" opacity={0.6}/>
           )}
           {/* current position dot */}
           {curDot&&(
@@ -1207,7 +1219,25 @@
               <circle cx={curDot.x} cy={curDot.y} r={4} fill={fillColor}/>
             </React.Fragment>
           )}
-          {/* x-axis week labels */}
+          {/* Phase strip embedded in SVG */}
+          {phaseSegs.map((ph,i)=>{
+            const x0=xOf(ph.start)-(ph.start===0?halfCol:halfCol);
+            const x1=xOf(ph.start+ph.count-1)+(ph.start+ph.count===n?halfCol:halfCol);
+            const meta=PHASE_META[ph.phase];
+            const isPast=ph.start+ph.count<=curWeekIdx;
+            const isCur=ph.start<=curWeekIdx&&curWeekIdx<ph.start+ph.count;
+            const opacity=isPast?0.35:isCur?1:0.22;
+            return(
+              <React.Fragment key={i}>
+                <rect x={x0} y={PHASE_STRIP_Y} width={x1-x0} height={PHASE_STRIP_H}
+                  fill={meta.color} fillOpacity={opacity} rx={2}/>
+                {isCur&&(
+                  <text x={(x0+x1)/2} y={PHASE_STRIP_Y+PHASE_STRIP_H-1} textAnchor="middle" fontSize={7} fill={meta.color} fontWeight={700}>{meta.label}</text>
+                )}
+              </React.Fragment>
+            );
+          })}
+          {/* x-axis week labels below phase strip */}
           {series.map((s,i)=>{
             if(i%labelStep!==0&&i!==n-1)return null;
             const isCur=i===curWeekIdx;
@@ -1230,7 +1260,7 @@
   }
 
   // ── Trainer: Plan view ────────────────────────────────────────────────────
-  function TrainerPlanView({plan,logs,onLog,onDeletePlan}){
+  function TrainerPlanView({plan,logs,plans,activePlanId,onSelectPlan,onLog,onDeletePlan}){
     const [modal,setModal]=useState(null);
     const [expandedWeek,setExpandedWeek]=useState(null);
     const today=new Date().toISOString().slice(0,10);
@@ -1246,6 +1276,21 @@
     const raceHrs=plan.goal.distanceKm/plan.goal.targetSpeedKmh;
     return(
       <div>
+        {/* Plan selector bar */}
+        {plans&&plans.length>0&&(
+          <div style={{display:'flex',gap:6,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+            {plans.map(p=>(
+              <button key={p.id}
+                className={`btn-sm ${p.id===activePlanId?'hi':''}`}
+                onClick={()=>onSelectPlan(p.id)}
+                style={{fontSize:11}}>
+                🏆 {p.plan.goal.eventName||'Plan'} · {new Date(p.plan.goal.targetDate).toLocaleDateString('de',{month:'short',year:'2-digit'})}
+              </button>
+            ))}
+            <button className="btn-sm" style={{marginLeft:'auto',fontSize:11}} onClick={()=>onSelectPlan(null)}>+ Neuer Plan</button>
+          </div>
+        )}
+
         {/* Goal/progress header */}
         <div className="trainer-progress">
           {/* Title + meta */}
@@ -1287,45 +1332,26 @@
             <ProgressCurveChart plan={plan} logs={logs}/>
           </div>
 
-          {/* Phase timeline */}
+          {/* Phase legend (simplified — phase bar is now embedded in chart) */}
           {(()=>{
-            const totalW=plan.weeks.length;
-            const phases=[];
-            let cur=null;
+            const phases=[];let cur=null;
             plan.weeks.forEach((w,i)=>{
               if(!cur||cur.phase!==w.phase){if(cur)phases.push(cur);cur={phase:w.phase,start:i,count:1,label:w.phaseName};}
               else cur.count++;
             });
             if(cur)phases.push(cur);
-            const progW=totalW>0?((curWeekIdx+1)/totalW)*100:0;
             return(
-              <div style={{marginBottom:14}}>
-                <div style={{fontSize:10,color:'#475569',marginBottom:4,display:'flex',justifyContent:'space-between'}}>
-                  <span>Trainingsphase</span>
-                  <span style={{color:'#64748b'}}>{curWeekIdx>=0?`Woche ${curWeekIdx+1} / ${totalW}`:`${totalW} Wochen gesamt`}</span>
-                </div>
-                <div style={{display:'flex',height:10,borderRadius:5,overflow:'hidden',gap:1}}>
-                  {phases.map((ph,i)=>{
-                    const meta=PHASE_META[ph.phase];
-                    const isPast=ph.start+ph.count<=curWeekIdx;
-                    const isCur=ph.start<=curWeekIdx&&curWeekIdx<ph.start+ph.count;
-                    return(
-                      <div key={i} title={ph.label} style={{flex:ph.count,background:meta.color,opacity:isPast?0.35:isCur?1:0.25,borderRadius:3,transition:'opacity 0.3s'}}/>
-                    );
-                  })}
-                </div>
-                <div style={{display:'flex',gap:8,marginTop:5,flexWrap:'wrap'}}>
-                  {phases.map((ph,i)=>{
-                    const meta=PHASE_META[ph.phase];
-                    const isCur=ph.start<=curWeekIdx&&curWeekIdx<ph.start+ph.count;
-                    return(
-                      <span key={i} style={{fontSize:10,color:isCur?meta.color:'#475569',fontWeight:isCur?600:400}}>
-                        <span style={{display:'inline-block',width:6,height:6,borderRadius:2,background:meta.color,marginRight:3,verticalAlign:'middle',opacity:isCur?1:0.5}}/>
-                        {ph.label} ({ph.count}W)
-                      </span>
-                    );
-                  })}
-                </div>
+              <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+                {phases.map((ph,i)=>{
+                  const meta=PHASE_META[ph.phase];
+                  const isCur=ph.start<=curWeekIdx&&curWeekIdx<ph.start+ph.count;
+                  return(
+                    <span key={i} style={{fontSize:10,color:isCur?meta.color:'#475569',fontWeight:isCur?600:400}}>
+                      <span style={{display:'inline-block',width:6,height:6,borderRadius:2,background:meta.color,marginRight:3,verticalAlign:'middle',opacity:isCur?1:0.5}}/>
+                      {ph.label} ({ph.count}W)
+                    </span>
+                  );
+                })}
               </div>
             );
           })()}
@@ -1419,9 +1445,10 @@
   }
 
   // ── Trainer: Panel wrapper ────────────────────────────────────────────────
-  function TrainerPanel({plan,logs,onCreatePlan,onLogSession,onDeletePlan,profile}){
+  function TrainerPanel({plan,logs,plans,activePlanId,onSelectPlan,onCreatePlan,onLogSession,onDeletePlan,profile}){
     if(!plan)return <TrainerSetup onCreate={onCreatePlan} profile={profile}/>;
-    return <TrainerPlanView plan={plan} logs={logs} onLog={onLogSession} onDeletePlan={onDeletePlan}/>;
+    return <TrainerPlanView plan={plan} logs={logs} plans={plans} activePlanId={activePlanId}
+      onSelectPlan={onSelectPlan} onLog={onLogSession} onDeletePlan={onDeletePlan}/>;
   }
 
   // ── SVG Charts ───────────────────────────────────────────────────────────
@@ -1772,11 +1799,16 @@
 
   // ── App ───────────────────────────────────────────────────────────────────
   function App(){
+    // Load saved state once on startup
+    const _saved=React.useMemo(()=>{
+      try{return JSON.parse(localStorage.getItem('rennrad-v1'))||{};}catch{return{};}
+    },[]);
+
     // shared
-    const [apiKey,setApiKey]=useState('');
+    const [apiKey,setApiKey]=useState(_saved.apiKey||'');
     const [planMode,setPlanMode]=useState('roundtrip'); // 'roundtrip'|'manual'
-    const [profile,setProfile]=useState({name:'Fahrer',speed:25,age:'',weight:'',fitnessLevel:'intermediate',weeklyKm:'',ftp:''});
-    const [savedTours,setSavedTours]=useState([]);
+    const [profile,setProfile]=useState(_saved.profile||{name:'Fahrer',speed:25,age:'',weight:'',fitnessLevel:'intermediate',weeklyKm:'',ftp:''});
+    const [savedTours,setSavedTours]=useState(_saved.savedTours||[]);
     const [activeTab,setActiveTab]=useState('routes');
 
     // round-trip
@@ -1796,12 +1828,19 @@
     const [manLoading,setManLoading]=useState(false);
     const [manError,setManError]=useState('');
 
-    // trainer
-    const [trainingPlan,setTrainingPlan]=useState(null);
-    const [trainingLogs,setTrainingLogs]=useState({});
-    const [activities,setActivities]=useState([]);
+    // trainer — multiple plans
+    const [trainingPlans,setTrainingPlans]=useState(_saved.trainingPlans||[]);
+    const [activePlanId,setActivePlanId]=useState(_saved.activePlanId||null);
+    const [activities,setActivities]=useState(_saved.activities||[]);
     const manWpRef=useRef([]);
     const manReqId=useRef(0);
+
+    // Persist to localStorage on every relevant change
+    useEffect(()=>{
+      try{
+        localStorage.setItem('rennrad-v1',JSON.stringify({apiKey,profile,savedTours,trainingPlans,activePlanId,activities}));
+      }catch{}
+    },[apiKey,profile,savedTours,trainingPlans,activePlanId,activities]);
 
     // ── Round-trip planning ──
     const planRoundTrips=async()=>{
@@ -1860,29 +1899,51 @@
 
     // ── Trainer callbacks ──
     const createTrainingPlan=useCallback((prof,goal)=>{
-      setTrainingPlan(generateTrainingPlan(prof,goal));
-      setTrainingLogs({});
+      const newPlan=generateTrainingPlan(prof,goal);
+      const entry={id:String(Date.now()),plan:newPlan,logs:{}};
+      setTrainingPlans(prev=>[...prev,entry]);
+      setActivePlanId(entry.id);
       setActiveTab('trainer');
     },[]);
-    const logTrainingSession=useCallback((id,log)=>setTrainingLogs(l=>{if(log===undefined){const n={...l};delete n[id];return n;}return{...l,[id]:log};}),[]);
-    const deleteTrainingPlan=useCallback(()=>{setTrainingPlan(null);setTrainingLogs({});},[]);
+    const logTrainingSession=useCallback((sessId,log)=>{
+      setTrainingPlans(prev=>prev.map(p=>
+        p.id===activePlanId
+          ?{...p,logs:log===undefined?(({[sessId]:_,...rest})=>rest)(p.logs):{...p.logs,[sessId]:log}}
+          :p
+      ));
+    },[activePlanId]);
+    const deleteTrainingPlan=useCallback(()=>{
+      setTrainingPlans(prev=>{
+        const next=prev.filter(p=>p.id!==activePlanId);
+        setActivePlanId(next.length>0?next[next.length-1].id:null);
+        return next;
+      });
+    },[activePlanId]);
 
     // ── Backup ──
     const exportBackup=useCallback(()=>{
-      const data={version:1,exportedAt:new Date().toISOString(),apiKey,profile,savedTours,trainingPlan,trainingLogs,activities};
+      const data={version:2,exportedAt:new Date().toISOString(),apiKey,profile,savedTours,trainingPlans,activePlanId,activities};
       const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
       a.href=url;a.download=`rennrad-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
       URL.revokeObjectURL(url);
-    },[apiKey,profile,savedTours,trainingPlan,trainingLogs,activities]);
+    },[apiKey,profile,savedTours,trainingPlans,activePlanId,activities]);
     const importBackup=useCallback((data)=>{
-      if(!data||data.version!==1){alert('Unbekanntes Backup-Format (version ≠ 1).');return;}
+      if(!data||(data.version!==1&&data.version!==2)){alert('Unbekanntes Backup-Format.');return;}
       if(data.apiKey!==undefined)setApiKey(data.apiKey);
       if(data.profile)setProfile(p=>({...p,...data.profile}));
       if(data.savedTours)setSavedTours(data.savedTours);
-      if(data.trainingPlan)setTrainingPlan(data.trainingPlan);
-      if(data.trainingLogs)setTrainingLogs(data.trainingLogs);
+      // v2: trainingPlans array
+      if(data.trainingPlans){
+        setTrainingPlans(data.trainingPlans);
+        setActivePlanId(data.activePlanId||null);
+      }else if(data.trainingPlan){
+        // migrate v1 backup: wrap single plan in array
+        const entry={id:String(Date.now()),plan:data.trainingPlan,logs:data.trainingLogs||{}};
+        setTrainingPlans([entry]);
+        setActivePlanId(entry.id);
+      }
       if(data.activities)setActivities(data.activities);
     },[]);
 
@@ -2013,7 +2074,7 @@
           <div className="tabs">
             <button className={`tab ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>🗺️ Routen{planMode==='roundtrip'&&rtRoutes.length>0?` (${rtRoutes.length})`:planMode==='manual'&&manRoute?' (1)':''}</button>
             <button className={`tab ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>💾 Gespeichert{savedTours.length>0?` (${savedTours.length})`:''}</button>
-            <button className={`tab ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>🏋️ Trainer{trainingPlan?' ✓':''}</button>
+            <button className={`tab ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>🏋️ Trainer{trainingPlans.length>0?` (${trainingPlans.length})`:''}</button>
             <button className={`tab ${activeTab==='analytics'?'active':''}`} onClick={()=>setActiveTab('analytics')}>📊 Auswertung</button>
             <button className={`tab ${activeTab==='activities'?'active':''}`} onClick={()=>setActiveTab('activities')}>🚴 Aktivitäten{activities.length>0?` (${activities.length})`:''}</button>
             <button className={`tab ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>👤 Profil</button>
@@ -2058,13 +2119,23 @@
           )}
 
           {activeTab==='trainer'&&(
-            <TrainerPanel plan={trainingPlan} logs={trainingLogs} profile={profile}
-              onCreatePlan={createTrainingPlan} onLogSession={logTrainingSession} onDeletePlan={deleteTrainingPlan}/>
+            <TrainerPanel
+              plan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
+              logs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}
+              plans={trainingPlans}
+              activePlanId={activePlanId}
+              onSelectPlan={setActivePlanId}
+              profile={profile}
+              onCreatePlan={createTrainingPlan}
+              onLogSession={logTrainingSession}
+              onDeletePlan={deleteTrainingPlan}/>
           )}
 
           {activeTab==='analytics'&&(
             <div style={{padding:'16px'}}>
-              <AnalyticsPanel activities={activities} trainingPlan={trainingPlan} trainingLogs={trainingLogs}/>
+              <AnalyticsPanel activities={activities}
+                trainingPlan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
+                trainingLogs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}/>
             </div>
           )}
 
@@ -2072,32 +2143,29 @@
             <div style={{padding:'16px'}}>
               <ActivityTab
                 activities={activities}
-                trainingPlan={trainingPlan}
-                trainingLogs={trainingLogs}
+                trainingPlan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
+                trainingLogs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}
                 onAddActivities={newActs=>{
                   setActivities(prev=>{
                     const ids=new Set(prev.map(a=>a.id));
                     return [...prev,...newActs.filter(a=>!ids.has(a.id))].sort((a,b)=>b.date.localeCompare(a.date));
                   });
-                  // Auto-link to training plan
-                  if(trainingPlan){
+                  // Auto-link to active training plan
+                  const activePlan=trainingPlans.find(p=>p.id===activePlanId);
+                  if(activePlan){
                     newActs.forEach(act=>{
-                      const result=linkActivityToSession(act,trainingPlan);
-                      if(result){
-                        const {sess}=result;
-                        setTrainingLogs(prev=>{
-                          if(prev[sess.id])return prev;
-                          return {...prev,[sess.id]:{
-                            distanceKm:act.distanceKm,
-                            avgSpeed:act.avgSpeedKmh,
-                            avgHR:act.avgHR,
-                            maxHR:act.maxHR,
-                            elevationM:act.elevationGainM,
-                            rpe:0,
-                            notes:`Auto: ${act.name}`,
-                            skipped:false,
-                            linkedActivityId:act.id,
-                          }};
+                      const result=linkActivityToSession(act,activePlan.plan);
+                      if(result&&!activePlan.logs[result.sess.id]){
+                        logTrainingSession(result.sess.id,{
+                          distanceKm:act.distanceKm,
+                          avgSpeed:act.avgSpeedKmh,
+                          avgHR:act.avgHR,
+                          maxHR:act.maxHR,
+                          elevationM:act.elevationGainM,
+                          rpe:0,
+                          notes:`Auto: ${act.name}`,
+                          skipped:false,
+                          linkedActivityId:act.id,
                         });
                       }
                     });
