@@ -309,6 +309,10 @@
   ];
 
   // ── Helpers ──────────────────────────────────────────────────────────────
+  const localISO = d => {
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  };
   function calcDifficulty(d,e){const s=d*0.5+e*0.02;if(s<30)return{label:'Leicht',cls:'diff-easy'};if(s<70)return{label:'Mittel',cls:'diff-medium'};if(s<130)return{label:'Schwer',cls:'diff-hard'};return{label:'Extrem',cls:'diff-extreme'};}
   function formatDuration(d,spd){const h=d/spd,hrs=Math.floor(h),m=Math.round((h-hrs)*60);return hrs>0?`${hrs}h ${m}m`:`${m}m`;}
   function parseCoords(t){const m=t.trim().match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);if(!m)return null;const a=parseFloat(m[1]),b=parseFloat(m[2]);if(a>=-90&&a<=90&&b>=-180&&b<=180)return[b,a];return null;}
@@ -362,7 +366,7 @@
       const g=i=>(i>=0&&i<v.length)?v[i]:'';
       const n=i=>{const x=parseFloat(g(i));return isNaN(x)||x===0?null:x;};
       let date='';
-      try{const d=new Date(g(C.date));if(!isNaN(d))date=d.toISOString().slice(0,10);}catch{}
+      try{const d=new Date(g(C.date));if(!isNaN(d))date=localISO(d);}catch{}
       if(!date)continue;
       const distM=parseFloat(g(C.dist))||0;
       const spdMs=n(C.avgSpd);
@@ -410,7 +414,7 @@
       for(let i=1;i<coords.length;i++){const d=coords[i][2]-coords[i-1][2];if(d>0)elevG+=d;}
       const totalSec=times.length>1?(times[times.length-1]-times[0])/1000:0;
       const avg=a=>a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):null;
-      const date=times.length?times[0].toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+      const date=times.length?times[0].toISOString().slice(0,10):localISO(new Date());
       const thin=coords.length>300?coords.filter((_,i)=>i%Math.floor(coords.length/300)===0):coords;
       return{id:`gpx_${Date.now()}`,source:'gpx',date,name,type:'Ride',
         distanceKm:Math.round(distM/10)/100,
@@ -456,9 +460,13 @@
   }
 
   function generateTrainingPlan(profile, goal) {
-    const today = new Date();
     const target = new Date(goal.targetDate);
-    const weeksTotal = Math.max(4, Math.round((target - today) / 604800000));
+    // Use provided start date (must be a Monday ideally, but accept any)
+    const startDate = goal.startDate ? new Date(goal.startDate+'T00:00:00') : (()=>{
+      const d=new Date(); const dow=d.getDay();
+      d.setDate(d.getDate()-(dow===0?6:dow-1)); d.setHours(0,0,0,0); return d;
+    })();
+    const weeksTotal = Math.max(4, Math.round((target - startDate) / 604800000));
     const taperW = Math.max(1, Math.min(2, Math.floor(weeksTotal * 0.1)));
     const peakW  = Math.max(1, Math.min(4, Math.floor(weeksTotal * 0.15)));
     const buildW = Math.max(2, Math.floor(weeksTotal * 0.35));
@@ -490,11 +498,6 @@
     const fl  = profile.fitnessLevel;
     const tpl = TPL[fl]||TPL.intermediate;
     const DAYS = ['Mo','Di','Mi','Do','Fr','Sa','So'];
-    // Start Monday of current week
-    const dow = today.getDay();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - (dow===0?6:dow-1));
-    startDate.setHours(0,0,0,0);
     const weeks = [];
     for(let w=0;w<weeksTotal;w++){
       const phase = w<baseW?'base':w<baseW+buildW?'build':w<baseW+buildW+peakW?'peak':'taper';
@@ -510,7 +513,7 @@
         const sd=new Date(wStart); sd.setDate(wStart.getDate()+di);
         const durMin = s.h?Math.max(20,Math.round(weekHrs*s.h*60/5)*5):0;
         const distKm = s.h?Math.max(0,Math.round(weekHrs*s.h*(SPDMAP[s.t]||24)/5)*5):0;
-        return{id:`w${w+1}d${di+1}`,date:sd.toISOString().slice(0,10),dayShort:DAYS[di],type:s.t,durationMin:durMin,distanceKm:distKm,description:sessionDesc(s.t,durMin,goal)};
+        return{id:`w${w+1}d${di+1}`,date:localISO(sd),dayShort:DAYS[di],type:s.t,durationMin:durMin,distanceKm:distKm,description:sessionDesc(s.t,durMin,goal)};
       });
       const fmt=d=>d.toLocaleDateString('de',{day:'2-digit',month:'2-digit'});
       weeks.push({weekNumber:w+1,phase,phaseName:PHASE_META[phase].label,weekHrs:Math.round(weekHrs*10)/10,weekKm:sessions.reduce((a,s)=>a+s.distanceKm,0),dateRange:`${fmt(wStart)} – ${fmt(wEnd)}`,sessions});
@@ -966,9 +969,13 @@
 
   // ── Trainer: Setup form (goal only — profile lives in 👤 Profil tab) ──────
   function TrainerSetup({onCreate,profile}){
-    const [goal,setGoal]=useState({eventName:'',targetDate:'',distanceKm:'',targetSpeedKmh:''});
+    const [goal,setGoal]=useState({
+      eventName:'',
+      startDate:(()=>{const d=new Date();const dow=d.getDay();d.setDate(d.getDate()+(dow===0?1:8-dow));return localISO(d);})(),
+      targetDate:'',distanceKm:'',targetSpeedKmh:''
+    });
     const sg=k=>v=>setGoal(g=>({...g,[k]:v}));
-    const ok=goal.targetDate&&goal.distanceKm&&goal.targetSpeedKmh;
+    const ok=goal.targetDate&&goal.distanceKm&&goal.targetSpeedKmh&&goal.startDate;
     const hasProfile=profile.age&&profile.weight;
     const raceHrs=ok?parseFloat(goal.distanceKm)/parseFloat(goal.targetSpeedKmh):0;
     const FL={beginner:'🌱 Einsteiger',intermediate:'🚴 Fortgeschritten',advanced:'🏆 Erfahren'};
@@ -993,19 +1000,20 @@
         <div style={{fontSize:13,fontWeight:600,color:'#f8fafc',marginBottom:12}}>Wettkampfziel</div>
         <div className="log-field"><label>Veranstaltung / Rennen (optional)</label><input className="log-input" type="text" value={goal.eventName} onChange={e=>sg('eventName')(e.target.value)} placeholder="z. B. Ötztal Radmarathon 2026"/></div>
         <div className="log-grid2">
-          <div className="log-field"><label>Zieldatum</label><input className="log-input" type="date" value={goal.targetDate} onChange={e=>sg('targetDate')(e.target.value)} min={new Date().toISOString().slice(0,10)}/></div>
+          <div className="log-field"><label>Startdatum des Plans</label><input className="log-input" type="date" value={goal.startDate} onChange={e=>sg('startDate')(e.target.value)}/></div>
+          <div className="log-field"><label>Zieldatum</label><input className="log-input" type="date" value={goal.targetDate} onChange={e=>sg('targetDate')(e.target.value)} min={localISO(new Date())}/></div>
           <div className="log-field"><label>Zieldistanz (km)</label><input className="log-input" type="number" min="20" value={goal.distanceKm} onChange={e=>sg('distanceKm')(e.target.value)} placeholder="z. B. 200"/></div>
           <div className="log-field"><label>Zielschnitt (km/h)</label><input className="log-input" type="number" min="10" max="50" step="0.5" value={goal.targetSpeedKmh} onChange={e=>sg('targetSpeedKmh')(e.target.value)} placeholder="z. B. 26"/></div>
         </div>
         {ok&&raceHrs>0&&(
           <div style={{background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#a5b4fc',marginBottom:14}}>
-            Geschätzte Renndauer: {Math.floor(raceHrs)}h {Math.round((raceHrs%1)*60)}min &nbsp;·&nbsp; Plan: {Math.max(4,Math.round((new Date(goal.targetDate)-new Date())/604800000))} Wochen
+            Geschätzte Renndauer: {Math.floor(raceHrs)}h {Math.round((raceHrs%1)*60)}min &nbsp;·&nbsp; Plan: {goal.startDate?Math.max(4,Math.round((new Date(goal.targetDate)-new Date(goal.startDate+'T00:00:00'))/604800000)):Math.max(4,Math.round((new Date(goal.targetDate)-new Date())/604800000))} Wochen
           </div>
         )}
         <button className="btn-primary indigo" disabled={!ok}
           onClick={()=>onCreate(
             {age:+(profile.age)||30,weight:+(profile.weight)||75,fitnessLevel:profile.fitnessLevel||'intermediate',weeklyKm:+(profile.weeklyKm)||0,ftp:+(profile.ftp)||null},
-            {eventName:goal.eventName,targetDate:goal.targetDate,distanceKm:+goal.distanceKm,targetSpeedKmh:+goal.targetSpeedKmh}
+            {eventName:goal.eventName,startDate:goal.startDate,targetDate:goal.targetDate,distanceKm:+goal.distanceKm,targetSpeedKmh:+goal.targetSpeedKmh}
           )}>🏋️ Trainingsplan erstellen</button>
       </div>
     );
@@ -1102,7 +1110,7 @@
 
   // ── Trainer: Progress Curve Chart ────────────────────────────────────────
   function ProgressCurveChart({plan,logs}){
-    const today=new Date().toISOString().slice(0,10);
+    const today=localISO(new Date());
     const curWeekIdx=plan.weeks.findIndex(w=>{const d0=w.sessions[0]?.date,d6=w.sessions[6]?.date;return today>=d0&&today<=d6;});
     // compute per-week plan and actual km
     const weekData=plan.weeks.map((w,wi)=>{
@@ -1262,7 +1270,7 @@
   // ── Trainer: Plan view ────────────────────────────────────────────────────
   function TrainerPlanView({plan,logs,plans,activePlanId,onSelectPlan,onLog,onDeletePlan}){
     const [expandedWeek,setExpandedWeek]=useState(null);
-    const today=new Date().toISOString().slice(0,10);
+    const today=localISO(new Date());
     const daysLeft=Math.max(0,Math.round((new Date(plan.goal.targetDate)-new Date())/86400000));
     const weeksLeft=Math.ceil(daysLeft/7);
     const allSess=plan.weeks.flatMap(w=>w.sessions);
@@ -1589,8 +1597,12 @@
   }
 
   // ── Manual entry modal ────────────────────────────────────────────────────
-  function ManualEntryModal({onSave,onClose}){
-    const [f,setF]=useState({date:new Date().toISOString().slice(0,10),name:'Trainingsfahrt',type:'Ride',distanceKm:'',durationH:'',durationM:'',avgSpeedKmh:'',elevationGainM:'',avgHR:'',maxHR:'',avgCadence:'',avgWatts:'',calories:'',rpe:0,notes:''});
+  function ManualEntryModal({onSave,onClose,initial}){
+    const [f,setF]=useState(()=>{
+      if(!initial)return{date:localISO(new Date()),name:'Trainingsfahrt',type:'Ride',distanceKm:'',durationH:'',durationM:'',avgSpeedKmh:'',elevationGainM:'',avgHR:'',maxHR:'',avgCadence:'',avgWatts:'',calories:'',rpe:0,notes:''};
+      const secs=initial.movingTimeSec||0;
+      return{...initial,durationH:secs?Math.floor(secs/3600):'',durationM:secs?Math.round((secs%3600)/60):''};
+    });
     const ch=k=>e=>setF(p=>({...p,[k]:e.target.value}));
     const rpeColor=n=>n<=3?'#22c55e':n<=6?'#f59e0b':n<=8?'#f97316':'#ef4444';
     const save=()=>{
@@ -1674,8 +1686,9 @@
   // ── Activity Tab ──────────────────────────────────────────────────────────
   function ActivityTab({activities, trainingPlan, trainingLogs, onAddActivities, onDeleteActivity, onUpdateTrainingLog}) {
     const [manModal, setManModal] = useState(false);
+    const [editAct, setEditAct] = useState(null);
     const [range, setRange] = useState(9999);
-    const cutoff = new Date(Date.now()-range*86400000).toISOString().slice(0,10);
+    const cutoff = localISO(new Date(Date.now()-range*86400000));
     const filtered = [...activities].filter(a=>a.date>=cutoff&&isRideType(a.type)).sort((a,b)=>b.date.localeCompare(a.date));
     const typeIcon = t => /virtual/i.test(t)?'🖥️':/mountain|mtb/i.test(t)?'🏔️':/gravel/i.test(t)?'🪨':'🚴';
 
@@ -1743,6 +1756,7 @@
                         ))}
                       </div>
                     )}
+                    <button onClick={()=>setEditAct(a)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Bearbeiten">✏️</button>
                     <button onClick={()=>onDeleteActivity(a.id)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
                   </div>
                 );
@@ -1752,6 +1766,13 @@
         </div>
 
         {manModal&&<ManualEntryModal onSave={a=>{onAddActivities([a]);setManModal(false);}} onClose={()=>setManModal(false)}/>}
+        {editAct&&(
+          <ManualEntryModal
+            initial={editAct}
+            onSave={updated=>{onDeleteActivity(editAct.id);onAddActivities([{...updated,id:editAct.id}]);setEditAct(null);}}
+            onClose={()=>setEditAct(null)}
+          />
+        )}
       </div>
     );
   }
@@ -1760,7 +1781,7 @@
   function AnalyticsPanel({activities, trainingPlan, trainingLogs}){
     const [range,setRange]=useState(90);
     const [metric,setMetric]=useState('avgSpeedKmh');
-    const cutoff=new Date(Date.now()-range*86400000).toISOString().slice(0,10);
+    const cutoff=localISO(new Date(Date.now()-range*86400000));
     const filtered=[...activities].filter(a=>a.date>=cutoff&&isRideType(a.type)).sort((a,b)=>b.date.localeCompare(a.date));
     const totalKm=filtered.reduce((s,a)=>s+a.distanceKm,0);
     const withSpd=filtered.filter(a=>a.avgSpeedKmh);
@@ -1950,7 +1971,7 @@
       const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
-      a.href=url;a.download=`rennrad-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
+      a.href=url;a.download=`rennrad-backup-${localISO(new Date())}.json`;a.click();
       URL.revokeObjectURL(url);
     },[apiKey,profile,savedTours,trainingPlans,activePlanId,activities]);
     const importBackup=useCallback((data)=>{
