@@ -1261,7 +1261,6 @@
 
   // ── Trainer: Plan view ────────────────────────────────────────────────────
   function TrainerPlanView({plan,logs,plans,activePlanId,onSelectPlan,onLog,onDeletePlan}){
-    const [modal,setModal]=useState(null);
     const [expandedWeek,setExpandedWeek]=useState(null);
     const today=new Date().toISOString().slice(0,10);
     const daysLeft=Math.max(0,Math.round((new Date(plan.goal.targetDate)-new Date())/86400000));
@@ -1272,7 +1271,15 @@
     const totalKm=done.reduce((a,s)=>a+(parseFloat(logs[s.id]?.distanceKm)||0),0);
     const pct=Math.round(done.length/Math.max(1,active.length)*100);
     const curWeekIdx=plan.weeks.findIndex(w=>{const d0=w.sessions[0]?.date,d6=w.sessions[6]?.date;return today>=d0&&today<=d6;});
-    useEffect(()=>{if(curWeekIdx>=0&&expandedWeek===null)setExpandedWeek(curWeekIdx);},[curWeekIdx]);
+    useEffect(()=>{
+      if(expandedWeek===null){
+        if(curWeekIdx>=0){setExpandedWeek(curWeekIdx);return;}
+        const lastLogged=plan.weeks.reduce((best,w,i)=>{
+          return w.sessions.some(s=>logs[s.id])?i:best;
+        },-1);
+        if(lastLogged>=0)setExpandedWeek(lastLogged);
+      }
+    },[curWeekIdx]);
     const raceHrs=plan.goal.distanceKm/plan.goal.targetSpeedKmh;
     return(
       <div>
@@ -1397,49 +1404,66 @@
                 <span style={{color:'#64748b',fontSize:12,marginLeft:6}}>{isOpen?'▲':'▼'}</span>
               </div>
               {isOpen&&(
-                <div className="week-sessions">
-                  {week.sessions.map(sess=>{
-                    const m=SESSION_META[sess.type]||SESSION_META.ga1;
-                    const lg=logs[sess.id];
-                    const isDone=lg&&!lg.skipped;
-                    const isSkip=lg?.skipped;
-                    return(
-                      <div key={sess.id} className="session-chip"
-                        style={{background:`${m.color}18`,borderColor:isDone?m.color:isSkip?'#334155':'transparent',opacity:isSkip?0.4:1}}
-                        onClick={()=>setModal({session:sess,week})}>
-                        <span className="session-chip-day">{sess.dayShort}</span>
-                        <span style={{fontSize:20}}>{m.emoji}</span>
-                        <span className="session-chip-type" style={{color:m.color}}>{m.label}</span>
-                        {sess.durationMin>0&&<span className="session-chip-dur">{sess.durationMin}min</span>}
-                        {sess.distanceKm>0&&<span className="session-chip-dur">{sess.distanceKm}km</span>}
-                        {isDone&&sess.distanceKm>0&&(
-                          <div style={{fontSize:8,color:'#475569',marginTop:1}}>
-                            {Math.round(parseFloat(logs[sess.id]?.distanceKm)||0)} / {sess.distanceKm}km
+                <div style={{padding:'8px 10px 12px'}}>
+                  {/* Row 1: Plan tiles — always 7 */}
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4,marginBottom:4}}>
+                    {week.sessions.map(sess=>{
+                      const m=SESSION_META[sess.type]||SESSION_META.ga1;
+                      const lg=logs[sess.id];
+                      const isDone=lg&&!lg.skipped;
+                      const isSkip=lg?.skipped;
+                      return(
+                        <div key={sess.id} style={{
+                          background:`${m.color}16`,
+                          border:`1px solid ${isDone?m.color:isSkip?'#334155':'#1e293b'}`,
+                          borderRadius:8,padding:'7px 4px 6px',textAlign:'center',
+                          opacity:isSkip?0.38:1,position:'relative',minWidth:0
+                        }}>
+                          <div style={{fontSize:9,fontWeight:600,color:'#64748b',marginBottom:3,letterSpacing:'0.5px'}}>{sess.dayShort}</div>
+                          <div style={{fontSize:22,lineHeight:1}}>{m.emoji}</div>
+                          <div style={{fontSize:9,fontWeight:600,color:m.color,marginTop:3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{m.label}</div>
+                          {sess.distanceKm>0&&<div style={{fontSize:9,color:'#475569',marginTop:2}}>{sess.distanceKm}km</div>}
+                          {sess.durationMin>0&&!sess.distanceKm&&<div style={{fontSize:9,color:'#475569',marginTop:2}}>{sess.durationMin}min</div>}
+                          {isDone&&<div style={{position:'absolute',top:3,right:4,fontSize:9,color:'#22c55e'}}>✓</div>}
+                          {isSkip&&<div style={{position:'absolute',top:3,right:4,fontSize:9,color:'#ef4444'}}>–</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Row 2: Activity tiles — same grid, only shown when log has data */}
+                  {week.sessions.some(s=>logs[s.id]&&!logs[s.id].skipped&&(parseFloat(logs[s.id].distanceKm)||parseFloat(logs[s.id].avgHR)))&&(
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
+                      {week.sessions.map(sess=>{
+                        const lg=logs[sess.id];
+                        const hasData=lg&&!lg.skipped&&(parseFloat(lg.distanceKm)||parseFloat(lg.avgHR));
+                        if(!hasData)return <div key={sess.id}/>;
+                        const planKm=sess.distanceKm;
+                        const actKm=parseFloat(lg.distanceKm)||0;
+                        const met=planKm>0&&actKm>=planKm*0.9;
+                        const clr=met?'#22c55e':'#3b82f6';
+                        return(
+                          <div key={sess.id} style={{
+                            background:`${clr}10`,
+                            border:`1px solid ${clr}40`,
+                            borderRadius:8,padding:'6px 4px',textAlign:'center',minWidth:0
+                          }}>
+                            {actKm>0&&<div style={{fontSize:11,fontWeight:700,color:clr,lineHeight:1}}>{actKm}<span style={{fontSize:8,fontWeight:400,color:'#64748b'}}> km</span></div>}
+                            {parseFloat(lg.avgSpeed)>0&&<div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{parseFloat(lg.avgSpeed).toFixed(1)}<span style={{fontSize:8}}> km/h</span></div>}
+                            {parseFloat(lg.avgHR)>0&&<div style={{fontSize:9,color:'#f87171',marginTop:1}}>♥ {Math.round(parseFloat(lg.avgHR))}</div>}
+                            {parseFloat(lg.elevationM)>0&&<div style={{fontSize:9,color:'#a78bfa',marginTop:1}}>⛰ {Math.round(parseFloat(lg.elevationM))}</div>}
+                            {lg.rpe>0&&<div style={{fontSize:9,color:'#f59e0b',marginTop:1}}>RPE {lg.rpe}</div>}
                           </div>
-                        )}
-                        {isDone&&sess.type==='rest'&&parseFloat(logs[sess.id]?.distanceKm)>0&&(
-                          <div style={{fontSize:8,color:'#22c55e',marginTop:1}}>+{parseFloat(logs[sess.id].distanceKm)}km</div>
-                        )}
-                        {isDone&&<div className="chip-badge" style={{background:'#22c55e'}}>✓</div>}
-                        {isSkip&&<div className="chip-badge" style={{background:'#ef4444'}}>–</div>}
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           );
         })}
 
-        {modal&&(
-          <SessionLogModal session={modal.session} week={modal.week} existing={logs[modal.session.id]||null}
-            onSave={lg=>{
-              if(lg===null){onLog(modal.session.id,undefined);setModal(null);}
-              else{onLog(modal.session.id,lg);setModal(null);}
-            }}
-            onSkip={()=>{onLog(modal.session.id,{skipped:true});setModal(null);}}
-            onClose={()=>setModal(null)}/>
-        )}
       </div>
     );
   }
