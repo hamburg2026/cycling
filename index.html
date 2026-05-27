@@ -1829,11 +1829,12 @@
                 const isLogged = log && !log.skipped;
                 const sessLabel = sess ? `W${week.weekNumber} · ${sess.dayShort} · ${(SESSION_META[sess.type]||SESSION_META.ga1).label}` : null;
                 return (
-                  <div key={a.id} className="act-row" style={{flexWrap:'wrap',gap:8}}>
+                  <div key={a.id} className="act-row" style={{flexWrap:'wrap',gap:8,cursor:'pointer'}}
+                    onClick={()=>setMapAct(a)}>
                     <div className="act-icon">{typeIcon(a.type)}</div>
                     <div style={{minWidth:0,flex:1}}>
                       <div className="act-name" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:200}}>{a.name}</div>
-                      <div className="act-date">{a.date} · {a.source==='strava_csv'?'Strava':a.source==='gpx'?'GPX':'Manuell'}</div>
+                      <div className="act-date">{a.date} · {a.source==='strava_csv'?'Strava':a.source==='gpx'?'GPX':a.source==='fit'?'FIT':'Manuell'}</div>
                     </div>
                     <div className="act-pills">
                       {a.distanceKm>0&&<span className="act-pill hi">{a.distanceKm} km</span>}
@@ -1849,7 +1850,7 @@
                           <span style={{fontSize:10,color:'#64748b'}}>✓ Angerechnet</span>
                         ):(!isLogged&&(
                           <button className="btn-sm" style={{fontSize:10,padding:'2px 8px',background:'rgba(34,197,94,0.12)',borderColor:'rgba(34,197,94,0.3)',color:'#4ade80'}}
-                            onClick={()=>onUpdateTrainingLog(sess.id,{
+                            onClick={e=>{e.stopPropagation();onUpdateTrainingLog(sess.id,{
                               distanceKm:a.distanceKm,
                               avgSpeed:a.avgSpeedKmh,
                               avgHR:a.avgHR,
@@ -1859,13 +1860,12 @@
                               notes:`Aus Aktivität: ${a.name}`,
                               skipped:false,
                               linkedActivityId:a.id,
-                            })}>Anrechnen ✓</button>
+                            });}}>Anrechnen ✓</button>
                         ))}
                       </div>
                     )}
-                    {a.coords&&a.coords.length>1&&<button onClick={()=>setMapAct(a)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Route anzeigen">🗺️</button>}
-                    <button onClick={()=>setEditAct(a)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Bearbeiten">✏️</button>
-                    <button onClick={()=>onDeleteActivity(a.id)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
+                    <button onClick={e=>{e.stopPropagation();setEditAct(a);}} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Bearbeiten">✏️</button>
+                    <button onClick={e=>{e.stopPropagation();onDeleteActivity(a.id);}} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
                   </div>
                 );
               })}
