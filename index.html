@@ -1331,10 +1331,24 @@
   }
 
   // ── Trainer: Plan view ────────────────────────────────────────────────────
-  function TrainerPlanView({plan,logs,plans,activePlanId,onSelectPlan,onLog,onDeletePlan}){
+  function TrainerPlanView({plan,logs,plans,activePlanId,onSelectPlan,onLog,onDeletePlan,onMoveActivity}){
     const [expandedWeek,setExpandedWeek]=useState(null);
     const [selectedSess,setSelectedSess]=useState(null);
+    const [dragSessId,setDragSessId]=useState(null);
+    const [dragOverSessId,setDragOverSessId]=useState(null);
     const today=localISO(new Date());
+
+    const handleDrop=useCallback((targetSessId)=>{
+      if(!dragSessId||dragSessId===targetSessId)return;
+      const srcLog=logs[dragSessId];
+      if(!srcLog)return;
+      const targetSess=plan.weeks.flatMap(w=>w.sessions).find(s=>s.id===targetSessId);
+      if(!targetSess)return;
+      onLog(dragSessId,undefined);
+      onLog(targetSessId,{...srcLog});
+      if(srcLog.linkedActivityId&&onMoveActivity)onMoveActivity(srcLog.linkedActivityId,targetSess.date);
+      setDragSessId(null);setDragOverSessId(null);
+    },[dragSessId,logs,plan,onLog,onMoveActivity]);
     const daysLeft=Math.max(0,Math.round((new Date(plan.goal.targetDate)-new Date())/86400000));
     const weeksLeft=Math.ceil(daysLeft/7);
     const allSess=plan.weeks.flatMap(w=>w.sessions);
@@ -1489,11 +1503,18 @@
                       const isDone=lg&&!lg.skipped;
                       const isSkip=lg?.skipped;
                       return(
-                        <div key={sess.id} onClick={()=>setSelectedSess({sess,week})} style={{
+                        <div key={sess.id}
+                          onClick={()=>setSelectedSess({sess,week})}
+                          onDragOver={e=>{if(dragSessId&&dragSessId!==sess.id){e.preventDefault();setDragOverSessId(sess.id);}}}
+                          onDragLeave={()=>setDragOverSessId(null)}
+                          onDrop={e=>{e.preventDefault();handleDrop(sess.id);}}
+                          style={{
                           background:`${m.color}16`,
-                          border:`1px solid ${isDone?m.color:isSkip?'#334155':'#1e293b'}`,
+                          border:`1px solid ${dragOverSessId===sess.id?'#6366f1':isDone?m.color:isSkip?'#334155':'#1e293b'}`,
                           borderRadius:8,padding:'7px 4px 6px',textAlign:'center',
-                          opacity:isSkip?0.38:1,position:'relative',minWidth:0,cursor:'pointer'
+                          opacity:isSkip?0.38:1,position:'relative',minWidth:0,cursor:'pointer',
+                          outline:dragOverSessId===sess.id?'2px solid rgba(99,102,241,0.4)':'none',
+                          transition:'border-color 0.1s,outline 0.1s'
                         }}>
                           <div style={{fontSize:9,fontWeight:600,color:'#64748b',marginBottom:3,letterSpacing:'0.5px'}}>{sess.dayShort}</div>
                           <div style={{fontSize:22,lineHeight:1}}>{m.emoji}</div>
@@ -1519,11 +1540,18 @@
                         const met=planKm>0&&actKm>=planKm*0.9;
                         const clr=met?'#22c55e':'#3b82f6';
                         return(
-                          <div key={sess.id} onClick={()=>setSelectedSess({sess,week})} style={{
+                          <div key={sess.id}
+                            draggable={true}
+                            onDragStart={e=>{e.dataTransfer.effectAllowed='move';setDragSessId(sess.id);}}
+                            onDragEnd={()=>{setDragSessId(null);setDragOverSessId(null);}}
+                            onClick={()=>setSelectedSess({sess,week})}
+                            style={{
                             background:`${clr}10`,
                             border:`1px solid ${clr}40`,
                             borderRadius:8,padding:'6px 4px',textAlign:'center',minWidth:0,
-                            position:'relative',cursor:'pointer'
+                            position:'relative',cursor:'grab',
+                            opacity:dragSessId===sess.id?0.45:1,
+                            transition:'opacity 0.15s'
                           }}>
                             <button onClick={e=>{e.stopPropagation();onLog(sess.id,undefined);}} style={{position:'absolute',top:2,right:2,background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:9,lineHeight:1,padding:0}} title="Eintrag löschen">✕</button>
                             {actKm>0?<div style={{fontSize:11,fontWeight:700,color:clr,lineHeight:1}}>{actKm}<span style={{fontSize:8,fontWeight:400,color:'#64748b'}}> km</span></div>
@@ -1558,10 +1586,10 @@
   }
 
   // ── Trainer: Panel wrapper ────────────────────────────────────────────────
-  function TrainerPanel({plan,logs,plans,activePlanId,onSelectPlan,onCreatePlan,onLogSession,onDeletePlan,profile}){
+  function TrainerPanel({plan,logs,plans,activePlanId,onSelectPlan,onCreatePlan,onLogSession,onDeletePlan,onMoveActivity,profile}){
     if(!plan)return <TrainerSetup onCreate={onCreatePlan} profile={profile}/>;
     return <TrainerPlanView plan={plan} logs={logs} plans={plans} activePlanId={activePlanId}
-      onSelectPlan={onSelectPlan} onLog={onLogSession} onDeletePlan={onDeletePlan}/>;
+      onSelectPlan={onSelectPlan} onLog={onLogSession} onDeletePlan={onDeletePlan} onMoveActivity={onMoveActivity}/>;
   }
 
   // ── SVG Charts ───────────────────────────────────────────────────────────
@@ -2433,7 +2461,8 @@
                   profile={profile}
                   onCreatePlan={createTrainingPlan}
                   onLogSession={logTrainingSession}
-                  onDeletePlan={deleteTrainingPlan}/>
+                  onDeletePlan={deleteTrainingPlan}
+                  onMoveActivity={(actId,newDate)=>setActivities(prev=>prev.map(a=>a.id===actId?{...a,date:newDate}:a))}/>
               )}
 
               {activeTab==='analytics'&&(
