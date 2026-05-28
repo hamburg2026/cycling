@@ -1674,16 +1674,16 @@
     const ch=k=>e=>setF(p=>({...p,[k]:e.target.value}));
     const rpeColor=n=>n<=3?'#22c55e':n<=6?'#f59e0b':n<=8?'#f97316':'#ef4444';
     const save=()=>{
-      if(!f.distanceKm)return;
+      if(!f.date||!f.name)return;
       const movSec=(+f.durationH*3600)+(+f.durationM*60)||null;
-      const dist=parseFloat(f.distanceKm)||0;
+      const dist=parseFloat(f.distanceKm)||null;
       const spd=f.avgSpeedKmh?parseFloat(f.avgSpeedKmh):(movSec&&dist?Math.round(dist/movSec*3600*10)/10:null);
       onSave({id:`man_${Date.now()}`,source:'manual',date:f.date,name:f.name||'Trainingsfahrt',type:f.type,
         distanceKm:dist,movingTimeSec:movSec,elapsedTimeSec:movSec,avgSpeedKmh:spd,maxSpeedKmh:null,
         elevationGainM:parseFloat(f.elevationGainM)||null,elevationLossM:null,
         avgHR:parseFloat(f.avgHR)||null,maxHR:parseFloat(f.maxHR)||null,
         avgCadence:parseFloat(f.avgCadence)||null,avgWatts:parseFloat(f.avgWatts)||null,
-        calories:parseFloat(f.calories)||null,relativeEffort:f.rpe||null,coords:null,notes:f.notes});
+        calories:parseFloat(f.calories)||null,relativeEffort:f.rpe||null,coords:initial?.coords||null,notes:f.notes});
       onClose();
     };
     return(
@@ -1733,7 +1733,7 @@
           <div className="log-modal-footer">
             <div style={{flex:1}}/>
             <button className="btn-sm" onClick={onClose}>Abbrechen</button>
-            <button className="btn-sm hi" onClick={save} disabled={!f.distanceKm}>💾 Speichern</button>
+            <button className="btn-sm hi" onClick={save} disabled={!f.date||!f.name}>💾 Speichern</button>
           </div>
         </div>
       </div>
@@ -1752,6 +1752,89 @@
   }
 
   // ── Activity Tab ──────────────────────────────────────────────────────────
+  // ── Plan Assign Modal ─────────────────────────────────────────────────────
+  function PlanAssignModal({activity, trainingPlans, onAssign, onClose}){
+    const [selPlanId,setSelPlanId]=useState((trainingPlans||[])[0]?.id||null);
+    const entry=trainingPlans.find(p=>p.id===selPlanId);
+    const plan=entry?.plan;
+    const logs=entry?.logs||{};
+    return(
+      <div className="log-overlay" onClick={onClose}>
+        <div className="log-modal" style={{maxWidth:520}} onClick={e=>e.stopPropagation()}>
+          <div className="log-modal-header">
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#f8fafc'}}>📋 Trainingsplan zuordnen</div>
+              <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{activity.name} · {activity.date}</div>
+            </div>
+            <button style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18}} onClick={onClose}>✕</button>
+          </div>
+          <div className="log-modal-body">
+            {trainingPlans.length>1&&(
+              <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap'}}>
+                {trainingPlans.map(p=>(
+                  <button key={p.id} className={`btn-sm ${p.id===selPlanId?'hi':''}`}
+                    style={{fontSize:11}} onClick={()=>setSelPlanId(p.id)}>
+                    🏆 {p.plan.goal.eventName||'Plan'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {plan?(
+              <div style={{maxHeight:380,overflowY:'auto'}}>
+                {plan.weeks.map(week=>(
+                  <div key={week.weekNumber} style={{marginBottom:10}}>
+                    <div style={{fontSize:10,fontWeight:600,color:'#64748b',marginBottom:4,paddingLeft:2}}>
+                      W{week.weekNumber} · {week.phaseName} · {week.dateRange}
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
+                      {week.sessions.map(sess=>{
+                        const m=SESSION_META[sess.type]||SESSION_META.ga1;
+                        const lg=logs[sess.id];
+                        const isLinked=lg?.linkedActivityId===activity.id;
+                        const isLogged=lg&&!lg.skipped;
+                        return(
+                          <div key={sess.id} onClick={()=>{
+                            if(isLinked)return;
+                            onAssign(selPlanId,sess.id,{
+                              distanceKm:activity.distanceKm,avgSpeed:activity.avgSpeedKmh,
+                              avgHR:activity.avgHR,maxHR:activity.maxHR,
+                              elevationM:activity.elevationGainM,rpe:0,
+                              notes:`Aus Aktivität: ${activity.name}`,
+                              skipped:false,linkedActivityId:activity.id,
+                            });
+                            onClose();
+                          }} style={{
+                            background:isLinked?'rgba(34,197,94,0.18)':isLogged?`${m.color}0d`:`${m.color}08`,
+                            border:`1px solid ${isLinked?'rgba(34,197,94,0.6)':isLogged?`${m.color}40`:'#1e293b'}`,
+                            borderRadius:6,padding:'5px 2px',textAlign:'center',
+                            cursor:isLinked?'default':'pointer',
+                            opacity:sess.type==='rest'?0.45:1,transition:'background 0.1s'
+                          }}>
+                            <div style={{fontSize:8,color:'#64748b'}}>{sess.dayShort}</div>
+                            <div style={{fontSize:17,lineHeight:1.1}}>{m.emoji}</div>
+                            <div style={{fontSize:7,color:m.color,marginTop:1,overflow:'hidden',whiteSpace:'nowrap'}}>{sess.date.slice(5)}</div>
+                            {isLinked&&<div style={{fontSize:8,color:'#4ade80',marginTop:1}}>✓</div>}
+                            {isLogged&&!isLinked&&<div style={{fontSize:8,color:'#475569',marginTop:1}}>•</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ):(
+              <div style={{color:'#475569',fontSize:12,textAlign:'center',padding:20}}>Kein Trainingsplan vorhanden.</div>
+            )}
+          </div>
+          <div className="log-modal-footer">
+            <div style={{fontSize:11,color:'#475569',flex:1}}>Wähle eine Einheit um die Aktivität zuzuordnen</div>
+            <button className="btn-sm" onClick={onClose}>Schließen</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Activity Map Modal ────────────────────────────────────────────────────
   function ActivityMapModal({activity, onClose}){
     const mapRef=useRef(null);
@@ -1801,10 +1884,11 @@
     );
   }
 
-  function ActivityTab({activities, trainingPlans, activePlanId, onAddActivities, onDeleteActivity, onUpdateTrainingLog}) {
+  function ActivityTab({activities, trainingPlans, activePlanId, onAddActivities, onDeleteActivity, onUpdateActivity, onUpdateTrainingLog}) {
     const [manModal, setManModal] = useState(false);
     const [editAct, setEditAct] = useState(null);
     const [mapAct, setMapAct] = useState(null);
+    const [assignAct, setAssignAct] = useState(null);
     const [range, setRange] = useState(9999);
     const cutoff = localISO(new Date(Date.now()-range*86400000));
     const filtered = [...activities].filter(a=>a.date>=cutoff&&isRideType(a.type)).sort((a,b)=>b.date.localeCompare(a.date));
@@ -1841,8 +1925,7 @@
               {filtered.map(a=>{
                 const matches = findPlanMatches(a);
                 return (
-                  <div key={a.id} className="act-row" style={{flexWrap:'wrap',gap:8,cursor:'pointer'}}
-                    onClick={()=>setMapAct(a)}>
+                  <div key={a.id} className="act-row" style={{flexWrap:'wrap',gap:8}}>
                     <div className="act-icon">{typeIcon(a.type)}</div>
                     <div style={{minWidth:0,flex:1}}>
                       <div className="act-name" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:200}}>{a.name}</div>
@@ -1864,28 +1947,21 @@
                       return(
                         <div key={planId+sess.id} style={{display:'flex',alignItems:'center',gap:6,width:'100%',paddingLeft:42}}>
                           <span className="link-badge">🔗 {sessLabel}</span>
-                          {isLinked?(
-                            <span style={{fontSize:10,color:'#64748b'}}>✓ Angerechnet</span>
-                          ):(!isLogged&&(
-                            <button className="btn-sm" style={{fontSize:10,padding:'2px 8px',background:'rgba(34,197,94,0.12)',borderColor:'rgba(34,197,94,0.3)',color:'#4ade80'}}
-                              onClick={e=>{e.stopPropagation();onUpdateTrainingLog(planId,sess.id,{
-                                distanceKm:a.distanceKm,
-                                avgSpeed:a.avgSpeedKmh,
-                                avgHR:a.avgHR,
-                                maxHR:a.maxHR,
-                                elevationM:a.elevationGainM,
-                                rpe:0,
-                                notes:`Aus Aktivität: ${a.name}`,
-                                skipped:false,
-                                linkedActivityId:a.id,
-                              });}}>Anrechnen ✓</button>
-                          ))}
+                          {isLinked?<span style={{fontSize:10,color:'#4ade80'}}>✓ Angerechnet</span>
+                            :(!isLogged&&<button className="btn-sm" style={{fontSize:10,padding:'2px 8px',background:'rgba(34,197,94,0.12)',borderColor:'rgba(34,197,94,0.3)',color:'#4ade80'}}
+                              onClick={()=>onUpdateTrainingLog(planId,sess.id,{
+                                distanceKm:a.distanceKm,avgSpeed:a.avgSpeedKmh,avgHR:a.avgHR,maxHR:a.maxHR,
+                                elevationM:a.elevationGainM,rpe:0,notes:`Aus Aktivität: ${a.name}`,
+                                skipped:false,linkedActivityId:a.id,
+                              })}>Anrechnen ✓</button>
+                          )}
                         </div>
                       );
                     })}
-                    {a.coords&&a.coords.length>1&&<button onClick={e=>{e.stopPropagation();setMapAct(a);}} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Route anzeigen">🗺️</button>}
-                    <button onClick={e=>{e.stopPropagation();setEditAct(a);}} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Bearbeiten">✏️</button>
-                    <button onClick={e=>{e.stopPropagation();onDeleteActivity(a.id);}} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">✕</button>
+                    <button onClick={()=>setAssignAct(a)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Trainingsplan zuordnen">📋</button>
+                    {a.coords&&a.coords.length>1&&<button onClick={()=>setMapAct(a)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Route anzeigen">🗺️</button>}
+                    <button onClick={()=>setEditAct(a)} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Bearbeiten">✏️</button>
+                    <button onClick={()=>onDeleteActivity(a.id)} style={{background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:14,padding:'0 4px',flexShrink:0}} title="Löschen">🗑️</button>
                   </div>
                 );
               })}
@@ -1897,8 +1973,16 @@
         {editAct&&(
           <ManualEntryModal
             initial={editAct}
-            onSave={updated=>{onDeleteActivity(editAct.id);onAddActivities([{...updated,id:editAct.id}]);setEditAct(null);}}
+            onSave={updated=>{onUpdateActivity({...updated,id:editAct.id,source:editAct.source});setEditAct(null);}}
             onClose={()=>setEditAct(null)}
+          />
+        )}
+        {assignAct&&(trainingPlans||[]).length>0&&(
+          <PlanAssignModal
+            activity={assignAct}
+            trainingPlans={trainingPlans}
+            onAssign={onUpdateTrainingLog}
+            onClose={()=>setAssignAct(null)}
           />
         )}
         {mapAct&&<ActivityMapModal activity={mapAct} onClose={()=>setMapAct(null)}/>}
@@ -2348,12 +2432,12 @@
                 }}
                 onDeleteActivity={id=>{
                   setActivities(prev=>prev.filter(a=>a.id!==id));
-                  // Also remove any training log entries linked to this activity
                   setTrainingPlans(prev=>prev.map(p=>({
                     ...p,
-                    logs:Object.fromEntries(Object.entries(p.logs).filter(([,lg])=>lg.linkedActivityId!==id))
+                    logs:Object.fromEntries(Object.entries(p.logs||{}).filter(([,lg])=>lg?.linkedActivityId!==id))
                   })));
                 }}
+                onUpdateActivity={updated=>setActivities(prev=>prev.map(a=>a.id===updated.id?updated:a))}
                 onUpdateTrainingLog={(planId,sessId,log)=>logTrainingSession(sessId,log,planId)}
               />
             </div>
