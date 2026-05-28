@@ -1110,7 +1110,7 @@
                   {existing.elevationM&&<span>⛰️ {existing.elevationM} m</span>}
                 </div>
                 <button className="btn-sm" style={{marginTop:10,color:'#f87171',borderColor:'rgba(239,68,68,0.3)',fontSize:11}}
-                  onClick={()=>onSave(null)}>🔓 Verknüpfung aufheben</button>
+                  onClick={()=>{onSave(undefined);onClose();}}>🔓 Verknüpfung aufheben</button>
               </div>
             ):(
               <>
@@ -1494,7 +1494,7 @@
                     <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
                       {week.sessions.map(sess=>{
                         const lg=logs[sess.id];
-                        const hasData=lg&&!lg.skipped&&(parseFloat(lg.distanceKm)||parseFloat(lg.avgHR));
+                        const hasData=lg&&!lg.skipped&&(parseFloat(lg.distanceKm)||parseFloat(lg.avgHR)||lg.linkedActivityId);
                         if(!hasData)return <div key={sess.id}/>;
                         const planKm=sess.distanceKm;
                         const actKm=parseFloat(lg.distanceKm)||0;
@@ -1508,7 +1508,8 @@
                             position:'relative',cursor:'pointer'
                           }}>
                             <button onClick={e=>{e.stopPropagation();onLog(sess.id,undefined);}} style={{position:'absolute',top:2,right:2,background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:9,lineHeight:1,padding:0}} title="Eintrag löschen">✕</button>
-                            {actKm>0&&<div style={{fontSize:11,fontWeight:700,color:clr,lineHeight:1}}>{actKm}<span style={{fontSize:8,fontWeight:400,color:'#64748b'}}> km</span></div>}
+                            {actKm>0?<div style={{fontSize:11,fontWeight:700,color:clr,lineHeight:1}}>{actKm}<span style={{fontSize:8,fontWeight:400,color:'#64748b'}}> km</span></div>
+                              :lg.linkedActivityId&&<div style={{fontSize:14,lineHeight:1,marginTop:2}}>🔗</div>}
                             {parseFloat(lg.avgSpeed)>0&&<div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{parseFloat(lg.avgSpeed).toFixed(1)}<span style={{fontSize:8}}> km/h</span></div>}
                             {parseFloat(lg.avgHR)>0&&<div style={{fontSize:9,color:'#f87171',marginTop:1}}>♥ {Math.round(parseFloat(lg.avgHR))}</div>}
                             {parseFloat(lg.elevationM)>0&&<div style={{fontSize:9,color:'#a78bfa',marginTop:1}}>⛰ {Math.round(parseFloat(lg.elevationM))}</div>}
