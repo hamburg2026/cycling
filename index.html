@@ -1326,7 +1326,11 @@
     const allSess=plan.weeks.flatMap(w=>w.sessions);
     const active=allSess.filter(s=>s.type!=='rest');
     const done=active.filter(s=>logs[s.id]&&!logs[s.id].skipped);
-    const totalKm=done.reduce((a,s)=>a+(parseFloat(logs[s.id]?.distanceKm)||0),0);
+    // km: count ALL sessions with logged distance (incl. rest days where user rode)
+    const totalKm=allSess.reduce((a,s)=>{
+      const lg=logs[s.id];
+      return a+(lg&&!lg.skipped?parseFloat(lg.distanceKm)||0:0);
+    },0);
     const pct=Math.round(done.length/Math.max(1,active.length)*100);
     const curWeekIdx=plan.weeks.findIndex(w=>{const d0=w.sessions[0]?.date,d6=w.sessions[6]?.date;return today>=d0&&today<=d6;});
     useEffect(()=>{
