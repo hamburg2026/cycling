@@ -18,11 +18,20 @@
     ::-webkit-scrollbar-track { background: #1e293b; }
     ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
 
-    /* ── Sidebar ── */
-    .sidebar { width: 340px; min-width: 340px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; overflow-y: auto; height: 100vh; position: sticky; top: 0; }
-    .sidebar-header { padding: 20px 20px 14px; border-bottom: 1px solid #334155; background: linear-gradient(135deg,#1e293b,#0f172a); }
-    .app-title { font-size: 19px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 10px; }
-    .app-subtitle { font-size: 11px; color: #64748b; margin-top: 3px; }
+    /* ── Nav Sidebar ── */
+    .nav-sidebar { width: 190px; min-width: 190px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+    .nav-header { padding: 18px 16px 14px; border-bottom: 1px solid #2d3f55; }
+    .nav-logo { font-size: 17px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 9px; }
+    .nav-logo-sub { font-size: 10px; color: #475569; margin-top: 3px; }
+    .nav-group { padding: 8px 8px 4px; }
+    .nav-group-label { font-size: 9px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px 6px; display: block; }
+    .nav-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 12px; border: none; background: transparent; color: #64748b; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.15s; text-align: left; }
+    .nav-item:hover { background: rgba(99,102,241,0.08); color: #94a3b8; }
+    .nav-item.active { background: rgba(99,102,241,0.15); color: #a5b4fc; font-weight: 600; }
+    .nav-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+    .nav-badge { margin-left: auto; font-size: 10px; background: #0f172a; color: #64748b; padding: 1px 6px; border-radius: 10px; }
+    .nav-item.active .nav-badge { background: rgba(99,102,241,0.25); color: #a5b4fc; }
+    .nav-divider { margin: 6px 12px; border: none; border-top: 1px solid #2d3f55; }
     .sidebar-section { padding: 14px 16px; border-bottom: 1px solid #2d3f55; }
     .section-title { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
     .form-group { margin-bottom: 10px; }
@@ -96,10 +105,13 @@
     .btn-danger:hover { background: rgba(239,68,68,0.2); }
 
     /* ── Main ── */
-    .main { flex: 1; padding: 22px; overflow-y: auto; background: #0f172a; }
-    .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: #1e293b; padding: 4px; border-radius: 11px; border: 1px solid #334155; }
-    .tab { flex: 1; padding: 8px 14px; background: transparent; border: none; color: #64748b; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
-    .tab.active { background: #3b82f6; color: white; }
+    .main { flex: 1; overflow-y: auto; background: #0f172a; display: flex; flex-direction: column; }
+    .main-padded { padding: 22px; flex: 1; }
+
+    /* ── Route layout ── */
+    .route-layout { display: flex; flex: 1; overflow: hidden; }
+    .route-controls { width: 300px; min-width: 300px; background: #1e293b; border-right: 1px solid #334155; overflow-y: auto; height: 100%; }
+    .route-content { flex: 1; padding: 22px; overflow-y: auto; }
 
     /* ── Spinners ── */
     .spinner-overlay { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; color: #64748b; }
@@ -278,7 +290,9 @@
 
     @media (max-width: 768px) {
       #root { flex-direction: column; }
-      .sidebar { width: 100%; min-width: unset; height: auto; position: relative; }
+      .nav-sidebar { width: 100%; min-width: unset; height: auto; position: relative; }
+      .route-layout { flex-direction: column; }
+      .route-controls { width: 100%; min-width: unset; height: auto; }
       .route-stats { grid-template-columns: repeat(2,1fr); }
       .ana-stats { grid-template-columns: repeat(2,1fr); }
     }
@@ -2072,7 +2086,7 @@
     const [planMode,setPlanMode]=useState('roundtrip'); // 'roundtrip'|'manual'
     const [profile,setProfile]=useState(_saved.profile||{name:'Fahrer',speed:25,age:'',weight:'',fitnessLevel:'intermediate',weeklyKm:'',ftp:''});
     const [savedTours,setSavedTours]=useState(_saved.savedTours||[]);
-    const [activeTab,setActiveTab]=useState('routes');
+    const [activeTab,setActiveTab]=useState('trainer');
 
     // round-trip
     const [startCoord,setStartCoord]=useState(null);
@@ -2213,242 +2227,267 @@
 
     return(
       <>
-        {/* ── SIDEBAR ── */}
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <div className="app-title"><span style={{fontSize:26}}>🚴</span><div><div>Rennrad Planer</div><div className="app-subtitle">Routen für jeden Anspruch</div></div></div>
+        {/* ── NAV SIDEBAR ── */}
+        <aside className="nav-sidebar">
+          <div className="nav-header">
+            <div className="nav-logo"><span>🚴</span><div><div>Rennrad Planer</div><div className="nav-logo-sub">Training &amp; Routen</div></div></div>
           </div>
-
-          {/* Mode selector */}
-          <div className="sidebar-section">
-            <div className="mode-tabs">
-              <button className={`mode-tab ${planMode==='roundtrip'?'active':''}`} onClick={()=>setPlanMode('roundtrip')}>🔄 Rundtour</button>
-              <button className={`mode-tab ${planMode==='manual'?'active':''}`} onClick={()=>setPlanMode('manual')}>📍 Manuell</button>
-            </div>
+          <div className="nav-group">
+            <span className="nav-group-label">Training</span>
+            <button className={`nav-item ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>
+              <span className="nav-icon">🏋️</span>Trainer{trainingPlans.length>0&&<span className="nav-badge">{trainingPlans.length}</span>}
+            </button>
+            <button className={`nav-item ${activeTab==='activities'?'active':''}`} onClick={()=>setActiveTab('activities')}>
+              <span className="nav-icon">🚴</span>Aktivitäten{activities.length>0&&<span className="nav-badge">{activities.length}</span>}
+            </button>
+            <button className={`nav-item ${activeTab==='analytics'?'active':''}`} onClick={()=>setActiveTab('analytics')}>
+              <span className="nav-icon">📊</span>Auswertung
+            </button>
           </div>
-
-          {/* API Key */}
-          <div className="sidebar-section">
-            <div className="section-title">🔑 API-Zugang</div>
-            <div className="api-key-notice">Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer">openrouteservice.org</a> — 2.000/Tag gratis.</div>
-            <input type="text" value={apiKey} onChange={e=>setApiKey(e.target.value)} placeholder="5b3ce3…"/>
+          <hr className="nav-divider"/>
+          <div className="nav-group">
+            <span className="nav-group-label">Routen</span>
+            <button className={`nav-item ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>
+              <span className="nav-icon">🗺️</span>Planen
+            </button>
+            <button className={`nav-item ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>
+              <span className="nav-icon">💾</span>Gespeichert{savedTours.length>0&&<span className="nav-badge">{savedTours.length}</span>}
+            </button>
           </div>
-
-          {/* ── RUNDTOUR mode ── */}
-          {planMode==='roundtrip'&&(
-            <>
-              <div className="sidebar-section">
-                <div className="section-title">📍 Startpunkt & Distanz</div>
-                <div className="form-group">
-                  <label>Startpunkt</label>
-                  <GeoSearch mode="confirm" placeholder="Ort, Adresse oder Koordinaten" onSelect={(coord,label)=>{setStartCoord(coord);setStartLabel(label||'');}} onClear={()=>{setStartCoord(null);setStartLabel('');}}/>
-                </div>
-                <div className="form-group">
-                  <label>Streckenlänge</label>
-                  <input type="range" min="20" max="250" step="5" value={distKm} onChange={e=>setDistKm(+e.target.value)}/>
-                  <div className="range-display"><span className="range-value">{distKm}</span><span className="range-unit">km</span></div>
-                </div>
-              </div>
-              <div className="sidebar-section">
-                <div className="section-title">🛤️ Belagsarten</div>
-                <div className="surface-grid">
-                  {SURFACE_OPTIONS.map(s=>(
-                    <label key={s.id} className={`surface-chip ${surfaces.includes(s.id)?'active':''}`}>
-                      <input type="checkbox" checked={surfaces.includes(s.id)} onChange={()=>setSurfaces(p=>p.includes(s.id)?p.filter(x=>x!==s.id):[...p,s.id])} style={{display:'none'}}/>
-                      <span>{s.icon}</span><span>{s.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="sidebar-section">
-                <div className="section-title">⚡ Geschwindigkeit</div>
-                <label>Ø <strong style={{color:'#3b82f6'}}>{profile.speed} km/h</strong></label>
-                <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>setProfile(p=>({...p,speed:+e.target.value}))}/>
-              </div>
-              <div className="sidebar-section">
-                <button className="btn-primary" onClick={planRoundTrips} disabled={rtLoading}>
-                  {rtLoading?<><span className="spin-inline"/> Plane Routen…</>:<><span>🔄</span> 3 Rundtouren planen</>}
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* ── MANUAL mode ── */}
-          {planMode==='manual'&&(
-            <>
-              <div className="sidebar-section" style={{flex:1}}>
-                <div className="section-title">📍 Wegpunkte</div>
-                <div className="mwp-list">
-                  {manWaypoints.length===0&&<div className="mwp-empty">Noch keine Wegpunkte.<br/>Füge Orte in der gewünschten Reihenfolge hinzu.</div>}
-                  {manWaypoints.map((wp,i)=>{
-                    const isFirst=i===0,isLast=i===manWaypoints.length-1&&manWaypoints.length>1;
-                    return(
-                      <div key={i} className="mwp-row">
-                        <span className={`mwp-badge ${isFirst?'first':isLast&&!manLoop?'last':''}`} style={(!isFirst&&!(isLast&&!manLoop))?{background:'#6366f1'}:{}}>
-                          {isFirst?'🟢':isLast&&!manLoop?'🔴':i+1}
-                        </span>
-                        <span className="mwp-name" title={wp.name}>{wp.name}</span>
-                        <div className="mwp-actions">
-                          <button className="mwp-btn" onClick={()=>reorderManWp(i,i-1)} disabled={i===0}>↑</button>
-                          <button className="mwp-btn" onClick={()=>reorderManWp(i,i+1)} disabled={i===manWaypoints.length-1}>↓</button>
-                          <button className="mwp-btn del" onClick={()=>removeManWp(i)}>✕</button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {manLoop&&manWaypoints.length>0&&(
-                    <div className="mwp-row" style={{opacity:0.5}}>
-                      <span className="mwp-badge last">🔴</span>
-                      <span className="mwp-name" style={{color:'#86efac'}}>{manWaypoints[0].name} (Ziel)</span>
-                    </div>
-                  )}
-                </div>
-                <div style={{marginTop:10}}>
-                  <GeoSearch mode="oneshot" placeholder="➕ Ort suchen oder Koordinaten…" onSelect={addManWp}/>
-                </div>
-              </div>
-
-              <div className="sidebar-section">
-                <div className="section-title">🔀 Routenpräferenz</div>
-                <div className="pref-row">
-                  {PREFS.map(p=>(
-                    <button key={p.id} className={`pref-btn ${manPref===p.id?'active':''}`} onClick={()=>setManPref(p.id)}>{p.label}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="sidebar-section">
-                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#94a3b8'}}>
-                  <input type="checkbox" checked={manLoop} onChange={e=>setManLoop(e.target.checked)} style={{accentColor:'#6366f1',width:14,height:14}}/>
-                  Rundtour (zurück zum Startpunkt)
-                </label>
-              </div>
-
-              <div className="sidebar-section">
-                <div className="section-title">⚡ Geschwindigkeit</div>
-                <label>Ø <strong style={{color:'#3b82f6'}}>{profile.speed} km/h</strong></label>
-                <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>setProfile(p=>({...p,speed:+e.target.value}))}/>
-              </div>
-            </>
-          )}
+          <hr className="nav-divider"/>
+          <div className="nav-group">
+            <button className={`nav-item ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>
+              <span className="nav-icon">👤</span>Profil
+            </button>
+          </div>
         </aside>
 
         {/* ── MAIN ── */}
         <main className="main">
-          <div className="tabs">
-            <button className={`tab ${activeTab==='routes'?'active':''}`} onClick={()=>setActiveTab('routes')}>🗺️ Routen{planMode==='roundtrip'&&rtRoutes.length>0?` (${rtRoutes.length})`:planMode==='manual'&&manRoute?' (1)':''}</button>
-            <button className={`tab ${activeTab==='saved'?'active':''}`} onClick={()=>setActiveTab('saved')}>💾 Gespeichert{savedTours.length>0?` (${savedTours.length})`:''}</button>
-            <button className={`tab ${activeTab==='trainer'?'active':''}`} onClick={()=>setActiveTab('trainer')}>🏋️ Trainer{trainingPlans.length>0?` (${trainingPlans.length})`:''}</button>
-            <button className={`tab ${activeTab==='analytics'?'active':''}`} onClick={()=>setActiveTab('analytics')}>📊 Auswertung</button>
-            <button className={`tab ${activeTab==='activities'?'active':''}`} onClick={()=>setActiveTab('activities')}>🚴 Aktivitäten{activities.length>0?` (${activities.length})`:''}</button>
-            <button className={`tab ${activeTab==='profile'?'active':''}`} onClick={()=>setActiveTab('profile')}>👤 Profil</button>
-          </div>
-
           {activeTab==='routes'&&(
-            <>
-              {/* Roundtrip mode */}
-              {planMode==='roundtrip'&&(
-                <>
-                  {rtError&&<div className="error-box"><span style={{fontSize:19,flexShrink:0}}>⚠️</span><div><strong>Fehler:</strong> {rtError}</div></div>}
-                  {rtLoading&&<div className="spinner-overlay"><div className="spinner"/><div>Berechne 3 Rundtouren…</div></div>}
-                  {!rtLoading&&rtRoutes.length===0&&(
-                    <div className="empty-state"><div className="empty-icon">🔄</div><div className="empty-title">Bereit für deine Rundtour?</div><div className="empty-text">Wähle links Startpunkt und Distanz, dann „3 Rundtouren planen".</div></div>
-                  )}
-                  {!rtLoading&&rtRoutes.length>0&&(
-                    <div className="routes-grid">
-                      {rtRoutes.map((r,i)=>(
-                        <RouteCard key={i} index={i} initialRoute={r} apiKey={apiKey} startLabel={startLabel}
-                          typeInfo={ROUTE_TYPES.find(t=>t.id===r.type)} speedKmh={profile.speed}
-                          onSave={(r,n)=>setSavedTours(p=>[...p,{name:n,route:r}])}/>
-                      ))}
+            <div className="route-layout">
+              {/* Route controls panel (formerly the sidebar) */}
+              <div className="route-controls">
+                {/* Mode selector */}
+                <div className="sidebar-section">
+                  <div className="mode-tabs">
+                    <button className={`mode-tab ${planMode==='roundtrip'?'active':''}`} onClick={()=>setPlanMode('roundtrip')}>🔄 Rundtour</button>
+                    <button className={`mode-tab ${planMode==='manual'?'active':''}`} onClick={()=>setPlanMode('manual')}>📍 Manuell</button>
+                  </div>
+                </div>
+
+                {/* API Key */}
+                <div className="sidebar-section">
+                  <div className="section-title">🔑 API-Zugang</div>
+                  <div className="api-key-notice">Key bei <a href="https://openrouteservice.org" target="_blank" rel="noreferrer">openrouteservice.org</a> — 2.000/Tag gratis.</div>
+                  <input type="text" value={apiKey} onChange={e=>setApiKey(e.target.value)} placeholder="5b3ce3…"/>
+                </div>
+
+                {/* ── RUNDTOUR mode ── */}
+                {planMode==='roundtrip'&&(
+                  <>
+                    <div className="sidebar-section">
+                      <div className="section-title">📍 Startpunkt &amp; Distanz</div>
+                      <div className="form-group">
+                        <label>Startpunkt</label>
+                        <GeoSearch mode="confirm" placeholder="Ort, Adresse oder Koordinaten" onSelect={(coord,label)=>{setStartCoord(coord);setStartLabel(label||'');}} onClear={()=>{setStartCoord(null);setStartLabel('');}}/>
+                      </div>
+                      <div className="form-group">
+                        <label>Streckenlänge</label>
+                        <input type="range" min="20" max="250" step="5" value={distKm} onChange={e=>setDistKm(+e.target.value)}/>
+                        <div className="range-display"><span className="range-value">{distKm}</span><span className="range-unit">km</span></div>
+                      </div>
                     </div>
-                  )}
-                </>
-              )}
+                    <div className="sidebar-section">
+                      <div className="section-title">🛤️ Belagsarten</div>
+                      <div className="surface-grid">
+                        {SURFACE_OPTIONS.map(s=>(
+                          <label key={s.id} className={`surface-chip ${surfaces.includes(s.id)?'active':''}`}>
+                            <input type="checkbox" checked={surfaces.includes(s.id)} onChange={()=>setSurfaces(p=>p.includes(s.id)?p.filter(x=>x!==s.id):[...p,s.id])} style={{display:'none'}}/>
+                            <span>{s.icon}</span><span>{s.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="sidebar-section">
+                      <div className="section-title">⚡ Geschwindigkeit</div>
+                      <label>Ø <strong style={{color:'#3b82f6'}}>{profile.speed} km/h</strong></label>
+                      <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>setProfile(p=>({...p,speed:+e.target.value}))}/>
+                    </div>
+                    <div className="sidebar-section">
+                      <button className="btn-primary" onClick={planRoundTrips} disabled={rtLoading}>
+                        {rtLoading?<><span className="spin-inline"/> Plane Routen…</>:<><span>🔄</span> 3 Rundtouren planen</>}
+                      </button>
+                    </div>
+                  </>
+                )}
 
-              {/* Manual mode */}
-              {planMode==='manual'&&(
-                <ManualRouteCard route={manRoute} loading={manLoading} error={manError}
-                  speedKmh={profile.speed} waypoints={manWaypoints}
-                  onSave={(r,n)=>setSavedTours(p=>[...p,{name:n,route:r}])}
-                  onMoveWaypoint={moveManWp}/>
-              )}
-            </>
-          )}
+                {/* ── MANUAL mode ── */}
+                {planMode==='manual'&&(
+                  <>
+                    <div className="sidebar-section" style={{flex:1}}>
+                      <div className="section-title">📍 Wegpunkte</div>
+                      <div className="mwp-list">
+                        {manWaypoints.length===0&&<div className="mwp-empty">Noch keine Wegpunkte.<br/>Füge Orte in der gewünschten Reihenfolge hinzu.</div>}
+                        {manWaypoints.map((wp,i)=>{
+                          const isFirst=i===0,isLast=i===manWaypoints.length-1&&manWaypoints.length>1;
+                          return(
+                            <div key={i} className="mwp-row">
+                              <span className={`mwp-badge ${isFirst?'first':isLast&&!manLoop?'last':''}`} style={(!isFirst&&!(isLast&&!manLoop))?{background:'#6366f1'}:{}}>
+                                {isFirst?'🟢':isLast&&!manLoop?'🔴':i+1}
+                              </span>
+                              <span className="mwp-name" title={wp.name}>{wp.name}</span>
+                              <div className="mwp-actions">
+                                <button className="mwp-btn" onClick={()=>reorderManWp(i,i-1)} disabled={i===0}>↑</button>
+                                <button className="mwp-btn" onClick={()=>reorderManWp(i,i+1)} disabled={i===manWaypoints.length-1}>↓</button>
+                                <button className="mwp-btn del" onClick={()=>removeManWp(i)}>✕</button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {manLoop&&manWaypoints.length>0&&(
+                          <div className="mwp-row" style={{opacity:0.5}}>
+                            <span className="mwp-badge last">🔴</span>
+                            <span className="mwp-name" style={{color:'#86efac'}}>{manWaypoints[0].name} (Ziel)</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{marginTop:10}}>
+                        <GeoSearch mode="oneshot" placeholder="➕ Ort suchen oder Koordinaten…" onSelect={addManWp}/>
+                      </div>
+                    </div>
 
-          {activeTab==='saved'&&(
-            savedTours.length===0
-              ?<div className="empty-state"><div className="empty-icon">🗺️</div><div className="empty-title">Noch keine Touren gespeichert</div><div className="empty-text">Plane eine Route und speichere sie hier.</div></div>
-              :<div>{savedTours.map((t,i)=><SavedRouteCard key={i} tour={t} index={i} onDelete={j=>setSavedTours(p=>p.filter((_,k)=>k!==j))}/>)}</div>
-          )}
+                    <div className="sidebar-section">
+                      <div className="section-title">🔀 Routenpräferenz</div>
+                      <div className="pref-row">
+                        {PREFS.map(p=>(
+                          <button key={p.id} className={`pref-btn ${manPref===p.id?'active':''}`} onClick={()=>setManPref(p.id)}>{p.label}</button>
+                        ))}
+                      </div>
+                    </div>
 
-          {activeTab==='trainer'&&(
-            <TrainerPanel
-              plan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
-              logs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}
-              plans={trainingPlans}
-              activePlanId={activePlanId}
-              onSelectPlan={setActivePlanId}
-              profile={profile}
-              onCreatePlan={createTrainingPlan}
-              onLogSession={logTrainingSession}
-              onDeletePlan={deleteTrainingPlan}/>
-          )}
+                    <div className="sidebar-section">
+                      <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#94a3b8'}}>
+                        <input type="checkbox" checked={manLoop} onChange={e=>setManLoop(e.target.checked)} style={{accentColor:'#6366f1',width:14,height:14}}/>
+                        Rundtour (zurück zum Startpunkt)
+                      </label>
+                    </div>
 
-          {activeTab==='analytics'&&(
-            <div style={{padding:'16px'}}>
-              <AnalyticsPanel activities={activities}
-                trainingPlan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
-                trainingLogs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}/>
+                    <div className="sidebar-section">
+                      <div className="section-title">⚡ Geschwindigkeit</div>
+                      <label>Ø <strong style={{color:'#3b82f6'}}>{profile.speed} km/h</strong></label>
+                      <input type="range" min="10" max="45" step="1" value={profile.speed} onChange={e=>setProfile(p=>({...p,speed:+e.target.value}))}/>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Route content (maps, cards) */}
+              <div className="route-content">
+                {/* Roundtrip mode */}
+                {planMode==='roundtrip'&&(
+                  <>
+                    {rtError&&<div className="error-box"><span style={{fontSize:19,flexShrink:0}}>⚠️</span><div><strong>Fehler:</strong> {rtError}</div></div>}
+                    {rtLoading&&<div className="spinner-overlay"><div className="spinner"/><div>Berechne 3 Rundtouren…</div></div>}
+                    {!rtLoading&&rtRoutes.length===0&&(
+                      <div className="empty-state"><div className="empty-icon">🔄</div><div className="empty-title">Bereit für deine Rundtour?</div><div className="empty-text">Wähle links Startpunkt und Distanz, dann „3 Rundtouren planen".</div></div>
+                    )}
+                    {!rtLoading&&rtRoutes.length>0&&(
+                      <div className="routes-grid">
+                        {rtRoutes.map((r,i)=>(
+                          <RouteCard key={i} index={i} initialRoute={r} apiKey={apiKey} startLabel={startLabel}
+                            typeInfo={ROUTE_TYPES.find(t=>t.id===r.type)} speedKmh={profile.speed}
+                            onSave={(r,n)=>setSavedTours(p=>[...p,{name:n,route:r}])}/>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Manual mode */}
+                {planMode==='manual'&&(
+                  <ManualRouteCard route={manRoute} loading={manLoading} error={manError}
+                    speedKmh={profile.speed} waypoints={manWaypoints}
+                    onSave={(r,n)=>setSavedTours(p=>[...p,{name:n,route:r}])}
+                    onMoveWaypoint={moveManWp}/>
+                )}
+              </div>
             </div>
           )}
 
-          {activeTab==='activities'&&(
-            <div style={{padding:'16px'}}>
-              <ActivityTab
-                activities={activities}
-                trainingPlans={trainingPlans}
-                activePlanId={activePlanId}
-                onAddActivities={newActs=>{
-                  setActivities(prev=>{
-                    const ids=new Set(prev.map(a=>a.id));
-                    return [...prev,...newActs.filter(a=>!ids.has(a.id))].sort((a,b)=>b.date.localeCompare(a.date));
-                  });
-                  // Auto-link to active training plan
-                  const activePlan=trainingPlans.find(p=>p.id===activePlanId);
-                  if(activePlan){
-                    newActs.forEach(act=>{
-                      const result=linkActivityToSession(act,activePlan.plan);
-                      if(result&&!activePlan.logs[result.sess.id]){
-                        logTrainingSession(result.sess.id,{
-                          distanceKm:act.distanceKm,
-                          avgSpeed:act.avgSpeedKmh,
-                          avgHR:act.avgHR,
-                          maxHR:act.maxHR,
-                          elevationM:act.elevationGainM,
-                          rpe:0,
-                          notes:`Auto: ${act.name}`,
-                          skipped:false,
-                          linkedActivityId:act.id,
-                        });
-                      }
+          {activeTab!=='routes'&&(
+            <div className="main-padded">
+              {activeTab==='saved'&&(
+                savedTours.length===0
+                  ?<div className="empty-state"><div className="empty-icon">🗺️</div><div className="empty-title">Noch keine Touren gespeichert</div><div className="empty-text">Plane eine Route und speichere sie hier.</div></div>
+                  :<div>{savedTours.map((t,i)=><SavedRouteCard key={i} tour={t} index={i} onDelete={j=>setSavedTours(p=>p.filter((_,k)=>k!==j))}/>)}</div>
+              )}
+
+              {activeTab==='trainer'&&(
+                <TrainerPanel
+                  plan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
+                  logs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}
+                  plans={trainingPlans}
+                  activePlanId={activePlanId}
+                  onSelectPlan={setActivePlanId}
+                  profile={profile}
+                  onCreatePlan={createTrainingPlan}
+                  onLogSession={logTrainingSession}
+                  onDeletePlan={deleteTrainingPlan}/>
+              )}
+
+              {activeTab==='analytics'&&(
+                <AnalyticsPanel activities={activities}
+                  trainingPlan={trainingPlans.find(p=>p.id===activePlanId)?.plan||null}
+                  trainingLogs={trainingPlans.find(p=>p.id===activePlanId)?.logs||{}}/>
+              )}
+
+              {activeTab==='activities'&&(
+                <ActivityTab
+                  activities={activities}
+                  trainingPlans={trainingPlans}
+                  activePlanId={activePlanId}
+                  onAddActivities={newActs=>{
+                    setActivities(prev=>{
+                      const ids=new Set(prev.map(a=>a.id));
+                      return [...prev,...newActs.filter(a=>!ids.has(a.id))].sort((a,b)=>b.date.localeCompare(a.date));
                     });
-                  }
-                }}
-                onDeleteActivity={id=>{
-                  setActivities(prev=>prev.filter(a=>a.id!==id));
-                  setTrainingPlans(prev=>prev.map(p=>({
-                    ...p,
-                    logs:Object.fromEntries(Object.entries(p.logs||{}).filter(([,lg])=>lg?.linkedActivityId!==id))
-                  })));
-                }}
-                onUpdateActivity={updated=>setActivities(prev=>prev.map(a=>a.id===updated.id?updated:a))}
-                onUpdateTrainingLog={(planId,sessId,log)=>logTrainingSession(sessId,log,planId)}
-              />
+                    // Auto-link to active training plan
+                    const activePlan=trainingPlans.find(p=>p.id===activePlanId);
+                    if(activePlan){
+                      newActs.forEach(act=>{
+                        const result=linkActivityToSession(act,activePlan.plan);
+                        if(result&&!activePlan.logs[result.sess.id]){
+                          logTrainingSession(result.sess.id,{
+                            distanceKm:act.distanceKm,
+                            avgSpeed:act.avgSpeedKmh,
+                            avgHR:act.avgHR,
+                            maxHR:act.maxHR,
+                            elevationM:act.elevationGainM,
+                            rpe:0,
+                            notes:`Auto: ${act.name}`,
+                            skipped:false,
+                            linkedActivityId:act.id,
+                          });
+                        }
+                      });
+                    }
+                  }}
+                  onDeleteActivity={id=>{
+                    setActivities(prev=>prev.filter(a=>a.id!==id));
+                    setTrainingPlans(prev=>prev.map(p=>({
+                      ...p,
+                      logs:Object.fromEntries(Object.entries(p.logs||{}).filter(([,lg])=>lg?.linkedActivityId!==id))
+                    })));
+                  }}
+                  onUpdateActivity={updated=>setActivities(prev=>prev.map(a=>a.id===updated.id?updated:a))}
+                  onUpdateTrainingLog={(planId,sessId,log)=>logTrainingSession(sessId,log,planId)}
+                />
+              )}
+
+              {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile} onExport={exportBackup} onImport={importBackup}/>}
             </div>
           )}
-
-          {activeTab==='profile'&&<ProfilePanel profile={profile} onChange={setProfile} onExport={exportBackup} onImport={importBackup}/>}
         </main>
       </>
     );
