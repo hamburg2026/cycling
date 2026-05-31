@@ -454,66 +454,145 @@
     return out.buffer;
   }
 
+  // ── Custom minimal FIT binary parser (fallback, no external library) ─────
+  function readFitVal(dv,u8,off,sz,bt,le){
+    try{
+      const t=bt&0x9F;
+      if(sz===1)return(t===0x01)?dv.getInt8(off):u8[off];
+      if(sz===2)return(t===0x83)?dv.getInt16(off,le):dv.getUint16(off,le);
+      if(sz===4)return(t===0x85)?dv.getInt32(off,le):(t===0x88)?dv.getFloat32(off,le):dv.getUint32(off,le);
+    }catch(e){}
+    return null;
+  }
+  function parseFitBinary(buf){
+    const u8=new Uint8Array(buf),dv=new DataView(buf);
+    if(u8[8]!==0x2E||u8[9]!==0x46||u8[10]!==0x49||u8[11]!==0x54)throw new Error('Keine FIT-Magic-Bytes');
+    const hdrSz=u8[0],dataSz=dv.getUint32(4,true);
+    let pos=hdrSz;const end=Math.min(hdrSz+dataSz,buf.byteLength-2);
+    const FIT_EPOCH=631065600; // seconds: 1989-12-31 UTC → Unix
+    const defs={};let sess=null;
+    const gps=[],hrs=[],cads=[],pwrs=[];
+    while(pos<end){
+      if(pos>=u8.length)break;
+      const rh=u8[pos++];
+      if(rh&0x80){const d=defs[(rh>>5)&3];if(d)pos+=d.ds;continue;} // compressed timestamp
+      const lt=rh&0x0F,isDef=!!(rh&0x40),hasDev=!!(rh&0x20);
+      if(isDef){
+        pos++; // reserved
+        const le=u8[pos++]===0;
+        const gn=le?dv.getUint16(pos,true):dv.getUint16(pos,false);pos+=2;
+        const nf=u8[pos++];const fields=[];let ds=0;
+        for(let i=0;i<nf&&pos+2<end;i++){const fn=u8[pos++],sz=u8[pos++];pos++;fields.push([fn,sz]);ds+=sz;}
+        if(hasDev&&pos<end){const nd=u8[pos++];for(let i=0;i<nd&&pos+2<end;i++){ds+=u8[pos+1];pos+=3;}}
+        defs[lt]={gn,fields,ds,le};
+      }else{
+        const def=defs[lt];if(!def){pos++;continue;}
+        if(def.gn===18||def.gn===20){
+          const row={};
+          for(const[fn,sz]of def.fields){
+            if(pos+sz>end){pos+=sz;continue;}
+            row[fn]=readFitVal(dv,u8,pos,sz,def.le?1:0,def.le);pos+=sz;
+          }
+          if(def.gn===18)sess=row;
+          else{
+            const SC=180/2147483648;
+            const lat=row[0],lon=row[1];
+            if(lat!=null&&lon!=null&&lat!==0x7FFFFFFF&&lon!==0x7FFFFFFF&&lat!==2147483647&&lon!==2147483647)
+              gps.push([lon*SC,lat*SC,row[2]!=null&&row[2]!==0xFFFF?row[2]/5-500:0]);
+            if(row[3]>0&&row[3]!==0xFF)hrs.push(row[3]);
+            if(row[4]>0&&row[4]!==0xFF)cads.push(row[4]);
+            if(row[7]>0&&row[7]!==0xFFFF)pwrs.push(row[7]);
+          }
+        }else pos+=def.ds;
+      }
+    }
+    if(!sess)throw new Error('Keine Session-Daten in FIT-Binär');
+    const avg=a=>a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):null;
+    const thin=gps.length>300?gps.filter((_,i)=>i%Math.floor(gps.length/300)===0):gps;
+    const SPORTS={1:'running',2:'cycling',5:'swimming'};
+    const sport=SPORTS[sess[34]]||'cycling';
+    const type=sport==='running'?'Run':'Ride';
+    const fitTs=sess[2]||sess[253];
+    const date=fitTs?localISO(new Date((fitTs+FIT_EPOCH)*1000)):localISO(new Date());
+    const inv32=v=>!v||v===0xFFFFFFFF,inv16=v=>!v||v===0xFFFF,inv8=v=>!v||v===0xFF;
+    return{
+      id:`fit_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+      source:'fit',date,
+      name:`${sport.charAt(0).toUpperCase()+sport.slice(1)}-Einheit`,
+      type,
+      distanceKm:!inv32(sess[9])?Math.round(sess[9]/1000)/100:null,
+      movingTimeSec:!inv32(sess[8])?sess[8]/1000:null,
+      elapsedTimeSec:!inv32(sess[7])?sess[7]/1000:null,
+      avgSpeedKmh:!inv16(sess[14])?Math.round(sess[14]/1000*3.6*10)/10:null,
+      maxSpeedKmh:!inv16(sess[15])?Math.round(sess[15]/1000*3.6*10)/10:null,
+      elevationGainM:!inv16(sess[18])?sess[18]:null,
+      elevationLossM:!inv16(sess[19])?sess[19]:null,
+      avgHR:(!inv8(sess[36])?sess[36]:null)||avg(hrs),
+      maxHR:(!inv8(sess[37])?sess[37]:null)||(hrs.length?Math.max(...hrs):null),
+      avgCadence:(!inv8(sess[38])?sess[38]:null)||avg(cads),
+      avgWatts:(!inv16(sess[16])?sess[16]:null)||avg(pwrs),
+      calories:!inv16(sess[48])?sess[48]:null,
+      relativeEffort:null,
+      coords:thin.length>1?thin:null,
+      notes:'',
+    };
+  }
+
   async function parseFitFile(arrayBuffer){
-    if(typeof FitParser==='undefined')throw new Error('FIT-Parser nicht geladen');
     // auto-detect gzip (magic bytes 1f 8b) and decompress
-    const hdr=new Uint8Array(arrayBuffer,0,2);
-    if(hdr[0]===0x1f&&hdr[1]===0x8b)arrayBuffer=await decompressGzip(arrayBuffer);
-    return new Promise((resolve,reject)=>{
-      const parser=new FitParser({force:true,speedUnit:'m/s',lengthUnit:'m',temperatureUnit:'celsius',elapsedRecordField:true,mode:'list'});
-      parser.parse(arrayBuffer,(error,data)=>{
-        if(error){reject(new Error('FIT-Datei konnte nicht gelesen werden: '+error));return;}
-        try{
-          // 'list' mode: data.sessions[], data.records[], data.laps[]
-          // cascade fallback: data.activity.sessions[0].laps[].records[]
-          const session=data.sessions?.[0]||data.activity?.sessions?.[0];
-          if(!session){reject(new Error('Keine Session-Daten in FIT-Datei'));return;}
-          // records are top-level in list mode; fall back to lap-nested cascade mode
-          const records=Array.isArray(data.records)&&data.records.length>0
-            ?data.records
-            :(session.laps||[]).flatMap(l=>l.records||[]);
-          const SC=180/Math.pow(2,31);
-          const rawCoords=records.filter(r=>r.position_lat!=null&&r.position_long!=null)
-            .map(r=>{
-              // detect if already converted to degrees (abs value < 360) vs semicircles (abs value > 90M)
-              const lat=Math.abs(r.position_lat)>1000?r.position_lat*SC:r.position_lat;
-              const lon=Math.abs(r.position_long)>1000?r.position_long*SC:r.position_long;
-              return[lon,lat,r.altitude||0];
-            });
-          const thin=rawCoords.length>300?rawCoords.filter((_,i)=>i%Math.floor(rawCoords.length/300)===0):rawCoords;
-          const hrVals=records.filter(r=>r.heart_rate>0).map(r=>r.heart_rate);
-          const cadVals=records.filter(r=>r.cadence>0).map(r=>r.cadence);
-          const pwrVals=records.filter(r=>r.power>0).map(r=>r.power);
-          const avg=a=>a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):null;
-          const sport=(session.sport||'cycling').toLowerCase();
-          const type=/cycling|bike|ride/i.test(sport)?'Ride':/running|run/i.test(sport)?'Run':sport;
-          const startTime=session.start_time||data.activity?.timestamp||records[0]?.timestamp;
-          const date=startTime?localISO(new Date(startTime)):localISO(new Date());
-          const distM=session.total_distance;
-          resolve({
-            id:`fit_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-            source:'fit',date,
-            name:session.sport?`${sport.charAt(0).toUpperCase()+sport.slice(1)}-Einheit`:'FIT-Aktivität',
-            type,
-            distanceKm:distM?Math.round(distM/10)/100:null,
-            movingTimeSec:session.total_timer_time||null,
-            elapsedTimeSec:session.total_elapsed_time||null,
-            avgSpeedKmh:session.avg_speed?Math.round(session.avg_speed*3.6*10)/10:null,
-            maxSpeedKmh:session.max_speed?Math.round(session.max_speed*3.6*10)/10:null,
-            elevationGainM:session.total_ascent||null,
-            elevationLossM:session.total_descent||null,
-            avgHR:session.avg_heart_rate||avg(hrVals),
-            maxHR:session.max_heart_rate||(hrVals.length?Math.max(...hrVals):null),
-            avgCadence:session.avg_cadence||avg(cadVals),
-            avgWatts:session.avg_power||avg(pwrVals),
-            calories:session.total_calories||null,
-            relativeEffort:null,
-            coords:thin.length>1?thin:null,
-            notes:'',
+    const hdr2=new Uint8Array(arrayBuffer,0,2);
+    if(hdr2[0]===0x1f&&hdr2[1]===0x8b)arrayBuffer=await decompressGzip(arrayBuffer);
+
+    // Try third-party library first
+    if(typeof FitParser!=='undefined'){
+      try{
+        const result=await new Promise((res,rej)=>{
+          const p=new FitParser({force:true,speedUnit:'m/s',lengthUnit:'m',temperatureUnit:'celsius',elapsedRecordField:true,mode:'list'});
+          p.parse(arrayBuffer,(err,data)=>{
+            if(err){rej(new Error(String(err)));return;}
+            try{
+              const session=data.sessions?.[0]||data.activity?.sessions?.[0];
+              if(!session){rej(new Error('Keine Session'));return;}
+              const records=Array.isArray(data.records)&&data.records.length>0
+                ?data.records:(session.laps||[]).flatMap(l=>l.records||[]);
+              const SC=180/Math.pow(2,31);
+              const rawCoords=records.filter(r=>r.position_lat!=null&&r.position_long!=null)
+                .map(r=>[Math.abs(r.position_long)>360?r.position_long*SC:r.position_long,
+                         Math.abs(r.position_lat)>360?r.position_lat*SC:r.position_lat,r.altitude||0]);
+              const thin=rawCoords.length>300?rawCoords.filter((_,i)=>i%Math.floor(rawCoords.length/300)===0):rawCoords;
+              const hrV=records.filter(r=>r.heart_rate>0).map(r=>r.heart_rate);
+              const cdV=records.filter(r=>r.cadence>0).map(r=>r.cadence);
+              const pwV=records.filter(r=>r.power>0).map(r=>r.power);
+              const avg=a=>a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):null;
+              const sport=(session.sport||'cycling').toLowerCase();
+              const type=/cycling|bike|ride/i.test(sport)?'Ride':/run/i.test(sport)?'Run':sport;
+              const ts=session.start_time||data.activity?.timestamp||records[0]?.timestamp;
+              res({
+                id:`fit_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,source:'fit',
+                date:ts?localISO(new Date(ts)):localISO(new Date()),
+                name:session.sport?`${sport.charAt(0).toUpperCase()+sport.slice(1)}-Einheit`:'FIT-Aktivität',
+                type,
+                distanceKm:session.total_distance?Math.round(session.total_distance/10)/100:null,
+                movingTimeSec:session.total_timer_time||null,elapsedTimeSec:session.total_elapsed_time||null,
+                avgSpeedKmh:session.avg_speed?Math.round(session.avg_speed*3.6*10)/10:null,
+                maxSpeedKmh:session.max_speed?Math.round(session.max_speed*3.6*10)/10:null,
+                elevationGainM:session.total_ascent||null,elevationLossM:session.total_descent||null,
+                avgHR:session.avg_heart_rate||avg(hrV),maxHR:session.max_heart_rate||(hrV.length?Math.max(...hrV):null),
+                avgCadence:session.avg_cadence||avg(cdV),avgWatts:session.avg_power||avg(pwV),
+                calories:session.total_calories||null,relativeEffort:null,
+                coords:thin.length>1?thin:null,notes:'',
+              });
+            }catch(e){rej(e);}
           });
-        }catch(e){reject(new Error('FIT-Parsing fehlgeschlagen: '+e.message));}
-      });
-    });
+        });
+        return result;
+      }catch(libErr){
+        console.warn('FitParser library failed, using fallback:',libErr.message);
+      }
+    }
+
+    // Fallback: custom binary FIT parser
+    return parseFitBinary(arrayBuffer);
   }
 
   // ── Training Plan ─────────────────────────────────────────────────────────
