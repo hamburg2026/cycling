@@ -1694,28 +1694,28 @@
     const [err,setErr]=useState('');
     const fileRef=useRef(null);
     const process=async files=>{
-      let added=0,errs=0;
+      let added=0;const errMsgs=[];
       for(const file of files){
-        const text=await file.text();
-        if(file.name.toLowerCase().endsWith('.csv')){
-          const acts=parseStravaCsv(text);
+        const fname=file.name.toLowerCase();
+        if(fname.endsWith('.csv')){
+          const acts=parseStravaCsv(await file.text());
           if(acts.length){onAdd(acts);added+=acts.length;}
-          else errs++;
-        }else if(file.name.toLowerCase().endsWith('.gpx')){
-          const act=parseGpxFile(text);
+          else errMsgs.push(`${file.name}: CSV leer oder unbekanntes Format`);
+        }else if(fname.endsWith('.gpx')){
+          const act=parseGpxFile(await file.text());
           if(act){onAdd([act]);added++;}
-          else errs++;
-        }else if(file.name.toLowerCase().endsWith('.fit')||file.name.toLowerCase().endsWith('.fit.gz')){
+          else errMsgs.push(`${file.name}: GPX konnte nicht gelesen werden`);
+        }else if(fname.endsWith('.fit')||fname.endsWith('.fit.gz')||fname.endsWith('.gz')){
           try{
             const buf=await file.arrayBuffer();
             const act=await parseFitFile(buf);
-            if(act){onAdd([act]);added++;}else errs++;
-          }catch(e){errs++;console.error('FIT parse error:',file.name,e.message);}
-        }else errs++;
+            if(act){onAdd([act]);added++;}else errMsgs.push(`${file.name}: Keine Aktivitätsdaten`);
+          }catch(e){errMsgs.push(`${file.name}: ${e.message}`);}
+        }else errMsgs.push(`${file.name}: Unbekanntes Format`);
       }
       if(added>0)setMsg(`✅ ${added} Aktivität${added!==1?'en':''} importiert.`);
-      if(errs>0)setErr(`⚠️ ${errs} Datei${errs!==1?'en':''} konnten nicht gelesen werden.`);
-      setTimeout(()=>{setMsg('');setErr('');},4000);
+      if(errMsgs.length>0)setErr(errMsgs.join(' | '));
+      setTimeout(()=>{setMsg('');setErr('');},12000);
     };
     const onDrop=e=>{e.preventDefault();e.currentTarget.classList.remove('over');process(Array.from(e.dataTransfer.files));};
     return(
