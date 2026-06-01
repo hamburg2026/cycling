@@ -482,28 +482,30 @@
         const le=u8[pos++]===0;
         const gn=le?dv.getUint16(pos,true):dv.getUint16(pos,false);pos+=2;
         const nf=u8[pos++];const fields=[];let ds=0;
-        for(let i=0;i<nf&&pos+2<end;i++){const fn=u8[pos++],sz=u8[pos++];pos++;fields.push([fn,sz]);ds+=sz;}
+        for(let i=0;i<nf;i++){if(pos+3>end)break;const fn=u8[pos++],sz=u8[pos++],bt=u8[pos++];fields.push([fn,sz,bt]);ds+=sz;}
         if(hasDev&&pos<end){const nd=u8[pos++];for(let i=0;i<nd&&pos+2<end;i++){ds+=u8[pos+1];pos+=3;}}
         defs[lt]={gn,fields,ds,le};
       }else{
         const def=defs[lt];if(!def){pos++;continue;}
+        const msgEnd=pos+def.ds; // exact end of this message incl. dev fields
         if(def.gn===18||def.gn===20){
           const row={};
-          for(const[fn,sz]of def.fields){
-            if(pos+sz>end){pos+=sz;continue;}
-            row[fn]=readFitVal(dv,u8,pos,sz,def.le?1:0,def.le);pos+=sz;
+          for(const[fn,sz,bt]of def.fields){
+            if(pos+sz>msgEnd)break;
+            row[fn]=readFitVal(dv,u8,pos,sz,bt,def.le);pos+=sz;
           }
           if(def.gn===18)sess=row;
           else{
             const SC=180/2147483648;
             const lat=row[0],lon=row[1];
-            if(lat!=null&&lon!=null&&lat!==0x7FFFFFFF&&lon!==0x7FFFFFFF&&lat!==2147483647&&lon!==2147483647)
+            if(lat!=null&&lon!=null&&Math.abs(lat)<2147483647&&Math.abs(lon)<2147483647)
               gps.push([lon*SC,lat*SC,row[2]!=null&&row[2]!==0xFFFF?row[2]/5-500:0]);
             if(row[3]>0&&row[3]!==0xFF)hrs.push(row[3]);
             if(row[4]>0&&row[4]!==0xFF)cads.push(row[4]);
             if(row[7]>0&&row[7]!==0xFFFF)pwrs.push(row[7]);
           }
-        }else pos+=def.ds;
+        }
+        pos=msgEnd; // always jump to correct end (skips dev-field data too)
       }
     }
     if(!sess)throw new Error('Keine Session-Daten in FIT-Binär');
